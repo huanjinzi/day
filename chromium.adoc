@@ -24,8 +24,9 @@ $CHROMIUM/device/vr/openvr  // win vr
 
 == 编译
 chromium的编译主要有两步：
-1.gn编译系统根据BUILD.gn生成BUILD.ninja
-2.ninja编译
+
+1. gn编译系统根据 `BUILD.gn` 生成 `BUILD.ninja` 
+2. ninja编译
 
 模块描述文件:
 ----
