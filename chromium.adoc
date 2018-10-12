@@ -1,0 +1,72 @@
+= chromium
+
+== 源码目录结构
+CHROMIUM=源码根目录
+
+----
+// chrome浏览器
+$CHROMIUM/chrome    // chrome浏览器目录
+$CHROMIUM/chrome/android    // apk目录，包括java代码，资源文件等
+$CHROMIUM/chrome/browser    // chrome浏览器功能模块，包括android、win、mac
+$CHROMIUM/chrome/common     // 通用基础库
+
+// device
+$CHROMIUM/device    // 外围设备相关的东西
+$CHROMIUM/device/base   // 定义通信接口
+$CHROMIUM/device/usb    // usb
+$CHROMIUM/device/bluetooth  // 蓝牙
+$CHROMIUM/device/vr         // vr
+$CHROMIUM/device/serial     // 串口
+
+$CHROMIUM/device/vr/android // android vr
+$CHROMIUM/device/vr/openvr  // win vr
+----
+
+== 编译
+chromium的编译主要有两步：
+1.gn编译系统根据BUILD.gn生成BUILD.ninja
+2.ninja编译
+
+模块描述文件:
+----
+BUILD.gn
+DEPS
+
+----
+
+----
+gn gen --args='target_os="android"' out/Default
+autoninja -C out/Default chrome_public_apk
+----
+
+
+----
+gn ls out/Default/ //chrome/browser:*
+----
+
+----
+//chrome/browser:active_use_util
+//chrome/browser:browser
+//chrome/browser:chrome_internal_resources_gen
+//chrome/browser:client_discourse_context_proto
+//chrome/browser:client_discourse_context_proto_gen
+//chrome/browser:delta_file_proto
+//chrome/browser:delta_file_proto_gen
+//chrome/browser:jni_headers
+//chrome/browser:jni_headers__jni_gen
+//chrome/browser:ntp_background_proto
+//chrome/browser:ntp_background_proto_gen
+//chrome/browser:resource_prefetch_predictor_proto
+//chrome/browser:resource_prefetch_predictor_proto_gen
+//chrome/browser:resources
+//chrome/browser:resources_grit
+//chrome/browser:test_support
+//chrome/browser:test_support_ui
+//chrome/browser:theme_properties
+----
+
+----
+gn desc out/Default/ //chrome/browser:browser
+----
+
+
