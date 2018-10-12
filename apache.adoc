@@ -1,0 +1,57 @@
+= apache 配置
+
+apache安装
+....
+sudo apt install apache2
+....
+
+apache配置文件位置
+....
+
+       /etc/apache2/
+       |-- apache2.conf <1>
+       |       `--  ports.conf
+       |-- mods-enabled <2>
+       |       |-- *.load
+       |       `-- *.conf
+       |-- conf-enabled <3>
+       |       `-- *.conf
+       `-- sites-enabled <4>
+               `-- *.conf
+....
+<1> 主配置文件
+<2> 加载的模块配置
+<3> 其他配置
+<4> 网站配置
+
+在 `/etc/apache2/apache2.conf` 中：
+
+[source,sh]
+.apache2.conf
+....
+# Include module configuration:
+IncludeOptional mods-enabled/*.load
+IncludeOptional mods-enabled/*.conf
+
+# Include list of ports to listen on
+Include ports.conf
+
+# Include generic snippets of statements
+IncludeOptional conf-enabled/*.conf
+
+# Include the virtual host configurations:
+IncludeOptional sites-enabled/*.conf
+....
+可以看到，在 `/etc/apache2/apache2.conf` 中，通过 `IncludeOptional` 和 `Include` 引入其他配置文件。
+
+**apachectl**
+
+查看 `apache` 已加载的模块：
+....
+apachectl -M
+....
+
+重启/启动/停止 `apache` ：
+....
+apachectl restart/start/stop
+....
