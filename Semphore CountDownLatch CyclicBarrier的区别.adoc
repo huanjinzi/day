@@ -1,0 +1,11 @@
+= Semphore CountDownLatch CyclicBarrier的区别
+
+== Semphore
+上机考试，4台电脑，10个人
+
+== CountDownLatch
+期末考试，可以提前交卷
+
+== CyclicBarrier
+期末考试，禁止提前交卷
+
