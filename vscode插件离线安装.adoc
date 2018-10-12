@@ -1,0 +1,8 @@
+= vscode插件离线安装
+
+1.官网下载插件
+
+2.安装插件
+....
+code --install-extension <extension.vsix>
+....
