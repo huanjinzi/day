@@ -1,0 +1,8 @@
+= 修改git push采用ssh方式免密码
+
+1.在github上添加 `publickey`
+
+2.执行以下命令
+....
+git remote set-url --push origin [ssh://xxx]
+....
