@@ -1,0 +1,28 @@
+= bash 参数说明
+运行中的Bash有两种属性(状态/模式)，一种，是否interactive shell(交互式Shell)，另一种，是否login shell(登录Shell)，然后，运行中的Shell排列组合有这么几种：
+
+登录交互式Shell、非登录交互式Shell、登录非交互式Shell、非登录非交互式Shell
+
+**交互式Shell：**没有非选项参数，没有-c，标准输入和标准输出与终端相连的，或者用-i参数启动的Bash实例。可以通过探测PS1变量是否设置或者$-返回值中是否包含字幕i来判定。什么是没有非选项参数？比如 `bash ~/myscript/clear_temp_files.sh` 这样执行的Shell脚本的Bash实例，就不是交互式Shell，因为脚本的路径，就是非选项参数。-c又是干什么的？就是使用一个字符串作为Bash的传入参数，比如 `bash -c ‘ls -ahl’` ，这种Shell进程也不算是交互式Shell。
+
+**登录Shell：**第0个参数以-号开头的Bash实例，或者用-login参数启动的Bash Shell。更加诡异了，什么叫第0个参数以-号开头？你只要随便登录一个*nix系统，Mac也行，Linux也行，然后echo $0，你就明白了，惊讶吧，出来的值竟然是-bash。真的是以-号开头的！！
+
+登录Shell(不管是不是交互式的)文件加载顺序如下:
+....
+/etc/profile
+~/.bash_profile
+~/.bash_login
+~/.profile
+....
+
+交互式非登录Shell文件加载顺序如下：
+....
+/etc/bashrc
+~/.bashrc
+....
+
+一个 `crontab` 脚本，没经过处理的话，既不是交互式Shell，也不是登录Shell，所以上面的都不会执行。怎么处理？比如可以把shabang改一下 `#!/bin/bash -l` 让脚本用登录Shell来解释执行，就可以加载 `/etc/profile` 或者，调用Bash解释器，加-l参数也可以。
+
+另一个遇到的问题，为什么在Linux，我们总是配置 `~/.bashrc` 但是在Mac下，我们配置就没有用呢，要去配置 `~/.bash_profile` 才行？哈！什么情况加载 `~/.bashrc` ，上面说得很清楚了，交互式非登录Shell，那在Mac下，你打开Term，echo一下$0，看看，前面是不是有个-号？说明这是交互式的登录Shell，当然不会加载 `~/.bashrc` 了。实属正常。你肯定要问了，为啥Linux下没问题呢？你打开`~/.profile` 看看就知道了，这货竟然在 `~/.profile` 文件里面source了 `~/.bashrc` ！
+
+bash shell中的选项可控制shell的行为和功能，我们可以通过shopt命令来设置。使用set命令也可以，但它已被shopt替代，但为了向下兼容，set命令还是可以使用的。使用不带参数的shopt命令可以列出当前shell中只能由shopt设置的选项，用shopt -o可列出可由set命令设置的选项。
