@@ -1,0 +1,153 @@
+= grep正则表达式
+
+测试文件
+
+.grep_test.txt
+....
+include::grep_test.txt[]
+....
+
+== 一类限定符
+
+1.`*` 0，1，2...
+....
+egrep "so*" grep_test.txt
+....
+
+====
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>soooo</b></font>
+</div>
+++++
+====
+
+2.`+` 1,2,3...
+....
+egrep "so+" grep_test.txt
+....
+
+====
+++++
+<div>
+oooos
+</div>
+
+<div>
+<font color="red"><b>soooo</b></font>
+</div>
+++++
+====
+
+3.`?` 0,1
+....
+egrep "so?" grep_test.txt
+....
+
+====
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>so</b></font>ooo
+</div>
+++++
+====
+
+== 二类限定符
+
+1.`{n}`
+....
+egrep "so{n}" grep_test.txt
+....
+====
+**n = 0**
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>s</b></font>oooo
+</div>
+++++
+'''
+**n = 1**
+++++
+<div>
+oooos
+</div>
+
+<div>
+<font color="red"><b>s</b></font>oooo
+</div>
+++++
+
+====
+
+2.`{n,}`
+....
+egrep "so{n,}" grep_test.txt
+....
+
+====
+**n = 0**
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>soooo</b></font>
+</div>
+++++
+'''
+**n = 1**
+++++
+<div>
+oooo
+</div>
+
+<div>
+<font color="red"><b>soooo</b></font>
+</div>
+++++
+====
+
+3.`{,n}`
+....
+egrep "so{,n}" grep_test.txt
+....
+
+====
+**n = 0**
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>s</b></font>oooo
+</div>
+++++
+'''
+**n = 1**
+++++
+<div>
+oooo<font color="red"><b>s</b></font>
+</div>
+
+<div>
+<font color="red"><b>so</b></font>ooo
+</div>
+++++
+====
+
+
+
