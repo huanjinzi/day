@@ -28,15 +28,39 @@ sudo make install
 
 4.install `opengrok` from `https://github.com/oracle/opengrok.git` .
 
-====
+''''
 1.download binary gz file and unzip it.
 
 2.exec follow shell command.
+
 .... 
-java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:8080/source -W /home/ssnwt/src/opengrok/config.xml -H -P -S -G -c /usr/local/bin/ctags
+java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:8080/source -W /home/ssnwt/src/opengrok/config.xml -H -v -P -S -G -c /usr/local/bin/ctags
 ....
 
+`-s` :source root,you can place your source project at here.
+
+`-d` :index data dir.
+
+`-c` :universal-ctag bin dir.
+
+`-v` :show progress.
+
+`-P` :every dir in source root as an project.
+
+`-U` :
+
+`-H` :
+
+`-S` :
+
+`-G` :
+
+[Note]
 ====
+this command will spend a lot of time.
+====
+
+''''
 
 5.open `http://localhost:8080/source` opengrok works.
 
