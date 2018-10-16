@@ -1,0 +1,42 @@
+= opengrok
+
+1.install tomcat8.
+....
+sudo apt install tomcat8
+....
+
+2.modify tomcat default port,default is 8080.
+
+[source,xml]
+./etc/tomcat8/server.xml
+....
+<Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               URIEncoding="UTF-8"
+               redirectPort="8443" />
+....
+
+3.install universal ctags,don't use `sudo apt install exuberant-ctags`,opengrok need universal-ctag,not exuberant-ctags.
+
+....
+git clone https://github.com/universal-ctags/ctags.git
+./autogen.sh
+./configure
+make
+sudo make install
+....
+
+4.install `opengrok` from `https://github.com/oracle/opengrok.git` .
+
+====
+1.download binary gz file and unzip it.
+
+2.exec follow shell command.
+.... 
+java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:8080/source -W /home/ssnwt/src/opengrok/config.xml -H -P -S -G -c /usr/local/bin/ctags
+....
+
+====
+
+5.open `http://localhost:8080/source` opengrok works.
+
