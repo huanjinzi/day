@@ -101,7 +101,7 @@ XTerm.background: midnightblue XTerm.foreground: white 然后你用 xrdb ~/.Xdef
 
 学习 Xwindow，其实最好的一个办法是看看 Xlib 编程的书籍，你可以在图书馆找到这样的书，我推荐 O'reily 的那本 Xlib 程序设计书（我忘了名字了），虽然它很老，但是那上面讲解的 Xwindow 的工作原理一直都没有变过。
 
-如果你不会编程序，你可以不看编程的部分而得到很多深入的概念上的认识，比如窗口属性，字体，颜色，…… 这些东西在你使用 Xwindow 时会有很大帮助。如果你真的要编写 Xlib 程序，这本书就过时了一点，你最好到 www.x.org 去免费下载最新的 Xlib 手册来看。 
+如果你不会编程序，你可以不看编程的部分而得到很多深入的概念上的认识，比如窗口属性，字体，颜色，…… 这些东西在你使用 Xwindow 时会有很大帮助。如果你真的要编写 Xlib 程序，这本书就过时了一点，你最好到 www.x.org 去免费下载最新的 Xlib 手册来看。
 
 == linux X-window remote desktop
 
@@ -126,6 +126,10 @@ sometimes the permissom is `-r\--r\--r--` , there is no `w` permissom may cause 
 
 4.check `/etc/ssh/sshd_config` and `/etc/ssh/ssh_config` .
 ....
+// in client(local) ~/.ssh/config
+ForwardX11 yes
+
+// in server(remote,no X-server) ~/.sshd/config
 X11Forwarding yes
 X11DisplayOffset 10
 ....
