@@ -1,0 +1,6 @@
+= chromium启动参数
+
+关闭 `web-security` ，允许跨域访问
+....
+chromium-browser --disable-web-security  --user-data-dir
+....
