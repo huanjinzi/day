@@ -1,0 +1,9 @@
+= Ubuntu
+
+== 解决ubuntu中使用ibus在浏览器中选择文字会把文字删掉的问题
+在终端中执行:
+....
+ibus-setup
+....
+
+在General选项中取消 `Embed preedit text in application window`
