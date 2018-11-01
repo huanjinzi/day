@@ -1,0 +1,33 @@
+= Android UI Thread 注意事项
+
+在一次调试蓝牙时，为了方便，就用 `TextView` 来显示信息，代码如下：
+
+[source,ruby]
+----
+@Override
+public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+    Thread thread =  Thread.currentThread();
+    Log.i("TAG", "thread = " + thread.getName());
+    console.setText("xxxx"));
+    Log.i("TAG", "--------->thread = " + thread.getName());
+    if (newState == BluetoothProfile.STATE_CONNECTED) {
+        Log.i("TAG", "Connected to GATT server.");
+        Log.i("TAG", "Attempting to start service discovery:" + TEST_GATT.discoverServices());
+    }
+    else if (newState == BluetoothProfile.STATE_DISCONNECTED{
+        Log.i("TAG", "Disconnected from GATT server.");
+    }
+}
+----
+
+`console` 为 `TextView` ，再 `Logcat` 中输出如下结果：
+....
+thread = Binder:22977_2
+....
+并且 `console.setText("xxxx"));` 执行成功，
+`Log.i("TAG", "--------->thread = " + thread.getName());`
+以及后面的代码都没有执行，我们知道，在非UI线程中操作 `View` 会报错，那为什么这里没有报错？
+
+**异常信息被Binder线程捕获了，没有抛出来**
+
+所以在处理 `Callback` 时一定要注意当前执行的线程，还有就是不要用 `TextView` 来打 `Log`。

@@ -1,0 +1,26 @@
+= Android 时钟 API
+
+....
+System.currentTimeMills()
+....
+
+这个函数取得的毫秒数，是由当前系统的日期和时间决定的。
+它可以通过 `SystemClock.setCurrentTimeMillis()` 来改变。
+
+**如果需要一个精确的计时器，那么一定不要用它。**
+
+....
+SystemClock.uptimeMillis()
+....
+
+这个时钟常常用来实现动画，`AnimationUtils.currentAnimationTimeMillis()` 便是由这个方法实现的。
+它代表从系统启动开始的毫秒数，当系统进入深睡眠时，`clock` 会停止，例如 __CPU off、显示器关闭，设备等待外部输入__等。
+它是许多定时器的基础，如 `Thread.sleep()、Object.wait()、System.nanoTime()` 。
+假如我们的 `Timer` 在设备休眠的时候不需要继续走，那么使用这个函数作为定时器是合适的。
+
+....
+SystemClock.elapsedRealtime()
+....
+
+这个时钟及时在CPU处于省电模式下或者深度睡眠的情况下，依然能正常运行。
+因此如果我们需要一个精确的计时器，那么就使用这个方法。
