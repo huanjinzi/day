@@ -1,9 +1,9 @@
-== apt
+## apt
 
 sudo dpkg -i xx.deb //
 sudo apt-get -f -y --allow-unauthenticated install
 
-== git 命令
+## git 命令
 
 ````
 git am --skip
@@ -12,13 +12,13 @@ git add -f
 git push origin HEAD:refs/for/master //提交代码
 ````
 
-== chromium
+## chromium
 ````
 gn gen --args='target_os="android"' out/Default
 autoninja -C out/Default monochrome_public_apk
 ````
 
-== adb logcat
+## adb logcat
 `````
 adb install -r MonochromePublic.apk
 adb push ~/libxrcore.so data/app/org.chromium.chrome-1/lib/arm/ || adb push ~/libxrcore.so data/app/org.chromium.chrome-2/lib/arm/
@@ -27,17 +27,17 @@ adb logcat -s TimeWarp:* chromium // logcat多标签过滤
 adb shell dumpsys SurfaceFlinger
 adb shell ps | grep chromium | awk '{if(NR==1) print $2}' | xargs adb shell kill //杀掉chromium浏览器
 `````
-== 文本处理与编辑
+## 文本处理与编辑
 ````
 awk '{print $1}' //打印第一列的数据
 awk '{if(NR==1) print}' //打印第一行的数据,NR行号，NF列数，
 ````
-== 文件查找
+## 文件查找
 ````
 find ./native_client -depth -iname .git //查找git仓库，删除加上 | xargs rm -rf
 ````
 
-== ssh
+## ssh
 ````
 ssh -X //图形界面
 ssh-copy-id -i ~/.ssh/yuanhuan.pub ssnwt@192.168.1.172 //免密码ssh
@@ -45,14 +45,14 @@ eval "$(ssh-agent -s)" && ssh-add ~/.ssh/
 scp out/Default/apks/MonochromePublic.apk huanjinzi@192.168.1.113:/home/huanjinzi/
 ````
 
-== 系统信息
+## 系统信息
 ````
 sudo lsb_release -a
 cat /proc/version
 cat /etc/issue
 ````
 
-== 系统运行状态
+## 系统运行状态
 ````
 htop // 进程
 top // 进程
@@ -60,7 +60,7 @@ sudo iftop // 网速
 ````
 
 
-== pdf文档
+## pdf文档
 ````
 alias ascpdf='asciidoctor-pdf -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN'
 asciidoctor -b html5 -a icons -a toc2 -a theme=flask
@@ -71,7 +71,7 @@ evince //打开pdf
 ````
 
 
-== 服务器
+## 服务器
 ````
 java -jar jenkins.war&
 java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:9090/source -W /home/ssnwt/src/opengrok/config.xml -T 16 --progress -S -H -P -G -c /usr/local/bin/ctags \
