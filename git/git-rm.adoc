@@ -54,11 +54,11 @@ git commit -m "rm file_del.txt."
 
 [NOTE]
 ====
-git rm file 和 git rm --cached file 之后不能执行 git add file.
+`git rm file` 和 `git rm --cached file` 之后不能执行 `git add file`.
 
 .特别
-- git rm file 之后执行 git add file 会报 file can't find 错误。
-- git rm --cached file 之后执行 git add file 会把文件又添加到 git 仓库里。
+- `git rm file` 之后执行 `git add file` 会报 file can't find 错误。
+- `git rm --cached file` 之后执行 `git add file` 会把文件又添加到 git 仓库里。
 
 ====
 
