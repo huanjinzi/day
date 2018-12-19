@@ -1,0 +1,65 @@
+:source-highlighter: pygments
+
+[quote, 荀子, 《劝学篇》]
+____
+积土成山，风雨兴焉。
+____
+
+== git rm 和 git rm --cached
+
+=== 测试环境配置
+
+==== 1.创建测试仓库
+
+[source,shell]
+----
+mkdir git_test
+cd git_test
+git init
+----
+
+==== 2.创建测试文件
+
+[source,shell]
+----
+echo xxx > file.txt
+echo xxx > file_del.txt
+----
+
+==== 3.提交测试文件
+
+[source,shell]
+----
+git add file.txt file_del.txt
+git commit -m "commit test file."
+----
+
+=== 应用场景
+
+==== 1 保留 workspace 文件
+
+[source,shell]
+----
+git rm --cached file_del.txt
+git commit -m "rm file_del.txt cached."
+----
+
+==== 2 不保留 workspace 文件
+
+[source,shell]
+----
+git rm file_del.txt
+git commit -m "rm file_del.txt."
+----
+
+[NOTE]
+====
+git rm file 和 git rm --cached file 之后不能执行 git add file.
+.特别
+- git rm file 之后执行 git add file 会报 file can't find 错误。
+- git rm --cached file 之后执行 git add file 会把文件又添加到 git 仓库里。
+====
+
+
+
+
