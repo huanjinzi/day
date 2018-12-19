@@ -1,0 +1,5 @@
+:source-highlight: pygments
+
+== 日常记录
+
+2018.12.19 git/git-rm.adoc[`git rm` 与 `git rm --cached` 的区别]
