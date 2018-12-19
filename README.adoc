@@ -1,5 +1,10 @@
 :source-highlight: pygments
 
+[quote,荀子,《劝学篇》]
+____
+无冥冥之志者，无昭昭之明；无惛惛之事者，无赫赫之功。
+____
+
 == 日常记录
 
 2018.12.19 link:git/git-rm.adoc[`git rm` 与 `git rm --cached` 的区别]
