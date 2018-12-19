@@ -1,0 +1,49 @@
+= ascdoc 环境配置
+
+== ruby安装
+详情查看ruby官网，安装 http://www.ruby-lang.org/en/documentation/[Ruby^] 之后，就可以使用 `gem` 命令
+....
+sudo apt-get install ruby-full
+runby -v
+....
+
+
+== 配置
+....
+gem install prawn --version 2.1.0
+gem install prawn-svg --version 0.26.0
+gem install prawn-templates --version 0.0.4
+....
+查看 `gem` 包安装位置
+....
+gem environment
+....
+会列出：
+....
+GEM PATHS:
+     - /var/lib/gems/2.3.0
+     - ~/.gem/ruby/2.3.0
+     - /usr/lib/x86_64-linux-gnu/rubygems-integration/2.3.0
+     - /usr/share/rubygems-integration/2.3.0
+     - /usr/share/rubygems-integration/all
+....
+其中，`/var/lib/gems/2.3.0` 目录是 `gem` 包的安装位置。
+`/var/lib/gems/2.3.0/gems/asciidoctor-pdf-cjk-kai_gen_gothic-0.1.1/exe/asciidoctor-pdf-cjk-kai_gen_gothic-install`
+
+== asciidoctor-pdf 安装
+....
+gem install asciidoctor-pdf --pre
+....
+
+== 语法高亮
+....
+gem install rouge
+gem install pygments.rb
+gem install coderay
+....
+
+语法高亮的使用，`:source-highlighter: rouge`，使用 `asciidoctor-pdf -v` 检查安装结果。
+
+
+
+

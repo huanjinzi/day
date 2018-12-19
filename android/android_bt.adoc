@@ -1,0 +1,69 @@
+= Android Bluetooth
+
+The Android platform includes support for the Bluetooth network stack, which allows a device to wirelessly exchange data with other Bluetooth devices. The application framework provides access to the Bluetooth functionality through the Android Bluetooth APIs. These APIs let applications wirelessly connect to other Bluetooth devices, enabling point-to-point and multipoint wireless features.
+
+Using the Bluetooth APIs, an Android application can perform the following:
+
+* Scan for other Bluetooth devices
+* Query the local Bluetooth adapter for paired Bluetooth devices
+* Establish RFCOMM channels
+* Connect to other devices through service discovery
+* Transfer data to and from other devices
+* Manage multiple connections
+
+This page focuses on Classic Bluetooth. Classic Bluetooth is the right choice for more battery-intensive operations, which include streaming and communicating between Android devices. For Bluetooth devices with low power requirements, Android 4.3 (API level 18) introduces API support for Bluetooth Low Energy. To learn more, see Bluetooth Low Energy.
+
+This document describes different Bluetooth profiles, including the Health Device Profile. It then explains how to use the Android Bluetooth APIs to accomplish the four major tasks necessary to communicate using Bluetooth: setting up Bluetooth, finding devices that are either paired or available in the local area, connecting devices, and transferring data between devices.
+
+== The basics
+
+In order for Bluetooth-enabled devices to transmit data between each other, they must first form a channel of communication using a pairing process. One device, a discoverable device, makes itself available for incoming connection requests. Another device finds the discoverable device using a service discovery process. After the discoverable device accepts the pairing request, the two devices complete a bonding process where they exchange security keys. The devices cache these keys for later use. After the pairing and bonding processes are complete, the two devices exchange information. When the session is complete, the device that initiated the pairing request releases the channel that had linked it to the discoverable device. The two devices remain bonded, however, so they can reconnect automatically during a future session as long as they're in range of each other and neither device has removed the bond.
+
+== Bluetooth permissions
+
+In order to use Bluetooth features in your application, you must declare two permissions. The first of these is `BLUETOOTH`. You need this permission to perform any Bluetooth communication, such as requesting a connection, accepting a connection, and transferring data.
+
+The other permission that you must declare is either `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION`. A location permission is required because Bluetooth scans can be used to gather information about the location of the user. This information may come from the user's own devices, as well as Bluetooth beacons in use at locations such as shops and transit facilities.
+
+If you want your app to initiate device discovery or manipulate Bluetooth settings, you must declare the `BLUETOOTH_ADMIN` permission in addition to the `BLUETOOTH` permission. Most applications need this permission solely for the ability to discover local Bluetooth devices. The other abilities granted by this permission should not be used, unless the application is a "power manager" that modifies Bluetooth settings upon user request.
+
+Declare the Bluetooth permission(s) in your application manifest file. For example:
+
+[source,xml]
+----
+<manifest>
+  <uses-permission android:name="android.permission.BLUETOOTH" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+</manifest>
+----
+
+See the `<uses-permission>` reference for more information about declaring application permissions.
+
+== Work with profiles
+
+Starting in Android 3.0, the Bluetooth API includes support for working with Bluetooth profiles. A Bluetooth profile is a wireless interface specification for Bluetooth-based communication between devices. An example is the Hands-Free profile. For a mobile phone to connect to a wireless headset, both devices must support the Hands-Free profile.
+
+The Android Bluetooth API provides implementations for the following Bluetooth profiles:
+
+* **Headset.** The Headset profile provides support for Bluetooth headsets to be used with mobile phones. Android provides the `BluetoothHeadset` class, which is a proxy for controlling the Bluetooth Headset Service. This includes both Bluetooth Headset and Hands-Free (v1.5) profiles. The `BluetoothHeadset` class includes support for AT commands. For more discussion of this topic, see Vendor-specific AT commands
+* **A2DP.** The Advanced Audio Distribution Profile (A2DP) profile defines how high quality audio can be streamed from one device to another over a Bluetooth connection. Android provides the `BluetoothA2dp` class, which is a proxy for controlling the Bluetooth A2DP Service.
+* **Health Device.** Android 4.0 (API level 14) introduces support for the Bluetooth Health Device Profile (HDP). This lets you create applications that use Bluetooth to communicate with health devices that support Bluetooth, such as heart-rate monitors, blood meters, thermometers, scales, and so on. For a list of supported devices and their corresponding device data specialization codes, refer to Bluetooth's HDP Device Data Specializations. These values are also referenced in the `ISO/IEEE 11073-20601` [7] specification as `MDC_DEV_SPEC_PROFILE_*` in the Nomenclature Codes Annex.
+
+Here are the basic steps for working with a profile:
+
+. Get the default adapter, as described in Setting Up Bluetooth.
+. Set up a `BluetoothProfile.ServiceListener`. This listener notifies `BluetoothProfile` clients when they have been connected to or disconnected from the service.
+. Use `getProfileProxy()` to establish a connection to the profile proxy object associated with the profile. In the example below, the profile proxy object is an instance of `BluetoothHeadset`.
+. In `onServiceConnected()`, get a handle to the profile proxy object.
+. Once you have the profile proxy object, you can use it to monitor the state of the connection and perform other operations that are relevant to that profile.
+
+[source,java]
+----
+<1>
+BluetoothManager mBluetoothManager = mContext.getSystemService(BluetoothManager.class);
+BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
+
+BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+----
+<1> 通过 `BluetoothManager` 获取 `BluetoothAdapter`.

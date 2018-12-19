@@ -1,0 +1,48 @@
+= GN编译系统
+
+== 运行 GN
+
+你可以在命令行里直接输入gn运行。因为在depot_tools（路径应该在你的环境变量PATH中已经设置过）工具目录中有一个相同名字的脚本。这个脚本会找到当前目录中的二进制文件并运行它。
+
+== 构建一个build
+使用GYP时，系统会根据相应的配置参数分别生成Debug和Release编译目录。但GN不一样，你可以任意配置你的编译参数和生成目录。编译时如果检测到Ninja文件需要更新时，也会自动重新生成。
+
+
+新生成一个编译目录：
+....
+gn gen out/my_build
+....
+
+== 传入编译参数
+
+设置编译目录的编译参数：
+....
+gn args out/my_build
+....
+
+然后，会弹出一个文本编辑器，像下面这样输入编译参数：
+....
+is_component_build = true
+is_debug = false
+....
+
+查看所有的参数变量以及他们的默认值：
+....
+gn args --list out/my_build
+....
+
+这个命令必须指定编译目录，因为不同的目录有不同的参数值。
+
+Chrome 开发者还可以参考Chrome-specific build configuration的指示获取更多信息。
+
+== 交叉编译配置（Cross-compiling to a target OS or architecture）
+
+运行gn args out/Default（用你需要的目录替换），添加下面的常用的交叉编译选项中的一个或多个：
+....
+target_os = "chromeos"
+target_os = "android"
+
+target_cpu = "arm"
+target_cpu = "x86"
+target_cpu = "x64"
+....

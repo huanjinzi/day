@@ -1,0 +1,9 @@
+= NDK编译问题
+
+....
+No toolchains found in the NDK toolchains folder for ABI with prefix: mips64el-linux-android
+....
+检查 `$SDK/ndk-bundle/toolchains/` 下面是否存在 `mips64el-linux-android`，不存在的话，
+在 `https://developer.android.google.cn/ndk/downloads/` 下载。
+
+

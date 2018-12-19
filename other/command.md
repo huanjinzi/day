@@ -1,8 +1,14 @@
 ## apt
-
+````
 sudo dpkg -i xx.deb //
 sudo apt-get -f -y --allow-unauthenticated install
 
+/var/cache/apt/archives //默认下载位置
+/usr/share //默认安装位置
+/usr/bin //可执行文件位置
+/etc //配置文件位置
+/usr/lib //lib文件位置
+````
 ## git 命令
 
 ````
@@ -114,7 +120,7 @@ java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/op
 -i d:src/test \
 -i d:src/toolchain \
 -i d:src/tools \
--i d:test
+-i d:test \
 -i d:tests
 ````
 
