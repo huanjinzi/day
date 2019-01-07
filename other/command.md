@@ -9,6 +9,13 @@ sudo apt-get -f -y --allow-unauthenticated install
 /etc //配置文件位置
 /usr/lib //lib文件位置
 ````
+
+## Gerrit
+
+```
+ssh -p 29418 yuanhuan@192.168.1.164 gerrit ls-projects //查看Gerrit Project
+ssh -p 29418 yuanhuan@192.168.1.164 gerrit review --verified 1 ad9b7af6 //code review
+```
 ## git 命令
 
 ````
@@ -16,19 +23,50 @@ git am --skip
 git am --reject --directory=src 0005-add-xrapi-and-xrcore-magic-window-impl.patch //--directory=src 需要相对目录，不能以'.','/','~'开头
 git add -f 
 git push origin HEAD:refs/for/master //提交代码
+
+git instaweb --httpd=webrick -p 9998
+git instaweb --httpd=webrick --stop
+git config  --file ./etc/gerrit.config --unset auth.httpHeader
+htpasswd -c etc/passwords admin
 ````
+
+## jenkins
+```
+java -jar jenkins.war --httpPort=8082
+
+JENKINS_HOME/config.xml  删除 </useSecurity> </authorizationStrategy> </securityRealm> 下的标签
+```
+
+## google source
+```
+https://android.googlesource.com/new-password //添加用户，避免IP限制
+```
+
+## gitiles
+[gitiles]
+	siteTitle = Git
+	canonicalUrl = huanjinzi
+	port = 8083
+[markdown]
+	blocknote = true
+	multicolumn = true
+	namedanchor = true
+	smartquote = true
+	toc = true
 
 ## chromium
 ````
 gn gen --args='target_os="android"' out/Default
 autoninja -C out/Default monochrome_public_apk
+scp out/Default/apks/MonochromePublic.apk huanjinzi@192.168.1.113:/home/huanjinzi/
+loadable_modules // 将so文件拷贝到apk
 ````
 
 ## adb logcat
 `````
-adb install -r MonochromePublic.apk
+adb install -r ~/MonochromePublic.apk
 adb push ~/libxrcore.so data/app/org.chromium.chrome-1/lib/arm/ || adb push ~/libxrcore.so data/app/org.chromium.chrome-2/lib/arm/
-adb logcat -s chromium:*
+adb logcat -s chromium:* | tee log.txt
 adb logcat -s TimeWarp:* chromium // logcat多标签过滤
 adb shell dumpsys SurfaceFlinger
 adb shell ps | grep chromium | awk '{if(NR==1) print $2}' | xargs adb shell kill //杀掉chromium浏览器
@@ -48,7 +86,6 @@ find ./native_client -depth -iname .git //查找git仓库，删除加上 | xargs
 ssh -X //图形界面
 ssh-copy-id -i ~/.ssh/yuanhuan.pub ssnwt@192.168.1.172 //免密码ssh
 eval "$(ssh-agent -s)" && ssh-add ~/.ssh/
-scp out/Default/apks/MonochromePublic.apk huanjinzi@192.168.1.113:/home/huanjinzi/
 ````
 
 ## 系统信息
@@ -57,6 +94,25 @@ sudo lsb_release -a
 cat /proc/version
 cat /etc/issue
 ````
+
+## Gradle
+```
+// gradle代理
+systemProp.https.proxyHost=192.168.1.113
+systemProp.https.proxyPort=8118
+systemProp.http.proxyHost=192.168.1.113
+systemProp.http.proxyPort=8118
+
+// gradle 配置文件
+~/.gradle/gradle.properties
+$PROJECT_ROOT/gradle.properties
+
+./gradlew build --refresh-dependencies //缓存刷新
+
+// 缓存目录，出现包引入有问题的情况，可以清理缓存尝试解决
+~/.gradle/caches/modules-2/files-2.1/
+
+```
 
 ## 系统运行状态
 ````
@@ -76,6 +132,31 @@ pip install --user pygments // pygmentize
 evince //打开pdf
 ````
 
+## 网络信息
+```
+sudo lsof -i:8080 
+sudo ifconfig eno1 192.168.1.172 //修改IP，重启失效
+```
+
+## Gerrit
+````
+java -jar gerrit-2.16.2.war init --batch -d ./review_site
+
+// 29418
+ssh -p 29999 admin@192.168.1.172 gerrit //gerrit命令
+ssh -p 29999 jenkins@192.168.1.172 gerrit review 2ab71c27e198f460c173f963bac34292df521cb5 --verified 1
+````
+
+## Clang-Format
+```
+clang-format -style=Chromium -i ./chrome/browser/android/vr/vr_shell_gl.h
+```
+
+## ELF
+little endian 和 big endian
+这两个古怪的名称来自英国作家斯威夫特的《格列佛游记》。
+在该书中，小人国里爆发了内战，战争起因是人们争论，吃鸡蛋时究竟是从大头(Big-endian)敲开还是从小头(Little-endian)敲开。
+为了这件事情，前后爆发了六次战争，一个皇帝送了命，另一个皇帝丢了王位。
 
 ## 服务器
 ````
