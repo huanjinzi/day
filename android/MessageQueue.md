@@ -118,6 +118,10 @@ boolean enqueueMessage(Message msg, long when) {
 从代码结构上面来看，代码大体分为3个部分：`/*111*/`，`/*222*/`和`/*333*/`，其中`/*111*/`、`/*222*/`是队列的插入操作，也就是说有新的`Message`
 进入队列，`/*333*/`决定是否唤醒工作线程。
 
+`/*111*/`如下图所示:
+
+![111](image/MessageQueue1.png)
+
 ## MessageQueue出队操作
 ```
     Message next() {
