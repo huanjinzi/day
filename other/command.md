@@ -28,6 +28,10 @@ git instaweb --httpd=webrick -p 9998
 git instaweb --httpd=webrick --stop
 git config  --file ./etc/gerrit.config --unset auth.httpHeader
 htpasswd -c etc/passwords admin
+
+git commit --amend --author='yuanhuan <yuanhuan@skyworth.com>'
+git remote add origin ssh://yuanhuan@192.168.1.164:29418/coocaa
+git branch --set-upstream-to=origin/<branch> master
 ````
 
 ## jenkins
@@ -70,6 +74,7 @@ adb logcat -s chromium:* | tee log.txt
 adb logcat -s TimeWarp:* chromium // logcat多标签过滤
 adb shell dumpsys SurfaceFlinger
 adb shell ps | grep chromium | awk '{if(NR==1) print $2}' | xargs adb shell kill //杀掉chromium浏览器
+adb shell dumpsys activity service com.svr.va/.core.VAService
 `````
 ## 文本处理与编辑
 ````
@@ -140,11 +145,21 @@ sudo ifconfig eno1 192.168.1.172 //修改IP，重启失效
 
 ## Gerrit
 ````
-java -jar gerrit-2.16.2.war init --batch -d ./review_site
+java -jar gerrit-2.16.2.war init --batch -d ./review_site //gerrit初始化
+
+ ./review_site/bin/gerrit.sh start //gerrit启动
 
 // 29418
 ssh -p 29999 admin@192.168.1.172 gerrit //gerrit命令
 ssh -p 29999 jenkins@192.168.1.172 gerrit review 2ab71c27e198f460c173f963bac34292df521cb5 --verified 1
+
+// add maven
+repositories {
+    // com.hz:checker:1.0.1
+    maven {
+        url 'https://dl.bintray.com/huanjinzi/maven'
+    }
+}
 ````
 
 ## Clang-Format
@@ -204,4 +219,25 @@ java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/op
 -i d:test \
 -i d:tests
 ````
+
+## bcdboot
+```
+https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/bcdboot-command-line-options-techref-di
+
+bcdboot D:\Windows /s S:  /* /s system partition(EFI S:)  window系统 D:\Windows 所在盘*/
+```
+
+## diskpart
+```
+https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/cc770877(v=ws.11)
+
+create partition efi size=100 offset=1000
+create partition msr size=200
+
+select partition 1
+select volume 1
+
+list partition
+list volume
+```
 
