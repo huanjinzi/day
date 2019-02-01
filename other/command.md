@@ -227,6 +227,31 @@ xhr.send(form);
 curl -F 'file=@/tmp/example.ipa' -F '_api_key=5e36337b4730e0ee0fbb4bfa83242816' https://www.pgyer.com/apiv2/app/upload
 ```
 
-## wget下载工具
+## keytool
 ```
+// -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -alias "github" -keyalg "RSA" -keystore "huanjinzi.keystore" //创建keystore，包含一个叫github的keypair
+keytool -list -keystore "huanjinzi.keystore" // 如果keystore有密码的话，需要输入密码
+keytool 
 ```
+
+## apk release
+```
+gradle assembleRelease // 编译生成apk
+zipalign -v -p 4 app-unsigned.apk app-unsigned-aligned.apk // 4K对齐apk
+apksigner sign --ks huanjinzi.keystore --out app-release.apk app-unsigned-aligned.apk //签名apk
+apksigner verify app-release.apk //检查app是否签名
+
+// gradle签名
+signingConfigs {
+        release {
+            storeFile file("my-release-key.jks")
+            storePassword "password"
+            keyAlias "my-alias"
+            keyPassword "password"
+        }
+    }
+signingConfig signingConfigs.release
+```
+
+
