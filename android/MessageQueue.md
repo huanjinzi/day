@@ -4,6 +4,12 @@
 ```
 frameworks/base/core/java/android/os/MessageQueue.java
 frameworks/base/core/java/android/os/Message.java
+
+frameworks/base/core/jni/android_os_MessageQueue.h
+frameworks/base/core/jni/android_os_MessageQueue.cpp
+
+system/core/include/utils/Looper.h
+system/core/libutils/Looper.cpp
 ```
 
 作为一个`MessageQueue`的基本方法：`入队(enqueue)`和`出队(dequeue)`：
@@ -249,7 +255,48 @@ boolean enqueueMessage(Message msg, long when) {
 ```
 
 ## Looper.pollOnce
+
+### 创建epoll实例
+在`Looper`的构造方法中，调用`rebuildEpollLocked()`方法，创建了一个`epoll instance`，并且让`mEpollFd`指向
+这个`epoll instance`，称这个对象为`mEpollFd`。这个最多监控`EPOLL_SIZE_HINT=8`个数的`fd`，也可以说，`mEpollFd`
+能监控八路IO上面的事件。
+
+```c++
+mEpollFd = epoll_create(EPOLL_SIZE_HINT);
 ```
+
+### 创建并添加wakeFd到epoll实例
+添加`mWakeEventFd`，通过
+```
+mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+```
+创建，`eventfd`跟信号量差不多，主要用来做进程/线程之间的同步，对`mWakeEventFd`的`read/write`操作都会
+使`mWakeEventFd`内部的`count`变化`+1/-1`。
+```c++
+struct epoll_event eventItem;
+memset(& eventItem, 0, sizeof(epoll_event)); // zero out unused members of data field union
+eventItem.events = EPOLLIN;
+eventItem.data.fd = mWakeEventFd;
+int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, & eventItem);
+```
+
+### 添加mRequests中的Fd到epoll实例
+```c++
+for (size_t i = 0; i < mRequests.size(); i++) {
+        const Request& request = mRequests.valueAt(i);
+        struct epoll_event eventItem;
+        request.initEventItem(&eventItem);
+
+        int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
+        if (epollResult < 0) {
+            ALOGE("Error adding epoll events for fd %d while rebuilding epoll set: %s",
+                  request.fd, strerror(errno));
+        }
+    }
+```
+
+
+```c++
 int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData) {
     int result = 0;
     for (;;) {
@@ -317,6 +364,7 @@ int Looper::pollInner(int timeoutMillis) {
     mPolling = true;
 
     struct epoll_event eventItems[EPOLL_MAX_EVENTS];
+
     int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
 
     // No longer idling.
