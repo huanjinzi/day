@@ -173,52 +173,21 @@ little endian 和 big endian
 在该书中，小人国里爆发了内战，战争起因是人们争论，吃鸡蛋时究竟是从大头(Big-endian)敲开还是从小头(Little-endian)敲开。
 为了这件事情，前后爆发了六次战争，一个皇帝送了命，另一个皇帝丢了王位。
 
+## 网络下载
+```
+wget -c https://mirrors.tuna.tsinghua.edu.cn/aosp-monthly/aosp-latest.tar // -c contine实现断点续传
+
+```
+
+## 文件系统
+```
+ls -i //查看inode
+```
+
 ## 服务器
-````
+```
 java -jar jenkins.war&
-java -jar lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:9090/source -W /home/ssnwt/src/opengrok/config.xml -T 16 --progress -S -H -P -G -c /usr/local/bin/ctags \
--r on \
--I *.java \
--I *.c \
--I *.cc \
--I *.h \
--I *.mk \
--I *.cpp \
--I *.aidl \
--I *.sh \
--i f:*.so \
--i f:*.gz \
--i f:*.o \
--i f:*.a \
--i f:*.zip \
--i f:*.html \
--i f:*.md \
--i f:*.ninga \
--i f:*.py \
--i f:*.js \
--i d:src/abi \
--i d:src/art \
--i d:src/bionic \
--i d:src/compatibility \
--i d:src/cts \
--i d:src/dalvik \
--i d:src/developers \
--i d:src/development \
--i d:src/docs \
--i d:src/external \
--i d:src/libcore \
--i d:src/libnativehelper \
--i d:src/ndk \
--i d:src/pdk \
--i d:src/platform_testing \
--i d:src/prebuilts \
--i d:src/sdk \
--i d:src/test \
--i d:src/toolchain \
--i d:src/tools \
--i d:test \
--i d:tests
-````
+```
 
 ## bcdboot
 ```
@@ -241,3 +210,23 @@ list partition
 list volume
 ```
 
+## js快速网络请求
+```
+var url = "https://www.pgyer.com/apiv2/app/view";
+
+var form=new FormData();
+
+var xhr = new XMLHttpRequest();
+xhr.open("POST", url , false);
+xhr.send(form);
+```
+
+## curl
+```
+// -F表示form -X POST
+curl -F 'file=@/tmp/example.ipa' -F '_api_key=5e36337b4730e0ee0fbb4bfa83242816' https://www.pgyer.com/apiv2/app/upload
+```
+
+## wget下载工具
+```
+```

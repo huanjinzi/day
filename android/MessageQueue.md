@@ -24,8 +24,8 @@ class Message {
 ```
 
 ## MessageQueue入队操作
-`MessageQueue`的入队方法`enqueueMessage(Message msg, long when)`多了一个参数`long when`。请注意，`when`表示`Message`进入队列的时间，而不是
-`Message`被工作线程处理的时间，请在这儿停顿并思考5秒钟。队列中的`Message`根据`when`由小到大排序，`when`越小，在队列中的位置越靠前面。这里的`when`为`android.os.SystemClock.uptimeMillis()`。所以，
+`MessageQueue`的入队方法`enqueueMessage(Message msg, long when)`多了一个参数`long when`。请注意，`when`默认是`Message`进入队列的时间，同时也是
+`Message`期望被处理的时间，请在这儿停顿并思考5秒钟。队列中的`Message`根据`when`由小到大排序，`when`越小，在队列中的位置越靠前面。这里的`when`为`android.os.SystemClock.uptimeMillis()`。所以，
 正常情况下，`when > 0`，当然也存在`when = 0`的情况，当`msg`的`when == 0`的时候，`msg`会成为队列的`head`节点。
 
 当调用`Handler.sendMessageAtFrontOfQueue(Message msg)`时候，会调用`MessageQueue.enqueueMessage(Message msg, long when)`，
@@ -123,6 +123,7 @@ boolean enqueueMessage(Message msg, long when) {
 ![111](image/MessageQueue1.png)
 
 ## MessageQueue出队操作
+在`next`方法中，有个非常重要的变量:`nextPollTimeoutMillis`，这是`epoll_wait`的一个超时参数，详细介绍请自行查阅相关资料。
 ```
     Message next() {
         // Return here if the message loop has already quit and been disposed.
@@ -136,19 +137,35 @@ boolean enqueueMessage(Message msg, long when) {
         int pendingIdleHandlerCount = -1; // -1 only during first iteration
         int nextPollTimeoutMillis = 0;
         for (;;) {
+            /* 
+             nextPollTimeoutMillis != 0 说明下个消息的when > now
+                第一次进入for(;;)的时候，nextPollTimeoutMillis = 0，
+                nativePollOnce会一直阻塞，直到相应的fd被触发。
+             */
             if (nextPollTimeoutMillis != 0) {
                 Binder.flushPendingCommands();
             }
 
+            /*
+            
+            这里会走到system/core/include/utils/Looper.h 中的intt pollOnce(int nextPollTimeoutMillis)，
+            再调用Looper.cpp的int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData)
+            其中，outFd outEvents outData 都为.NULL
+            
+            */
             nativePollOnce(ptr, nextPollTimeoutMillis);
 
             synchronized (this) {
                 // Try to retrieve the next message.  Return if found.
                 final long now = SystemClock.uptimeMillis();
                 Message prevMsg = null;
-                Message msg = mMessages;
+                Message msg = mMessages; // head节点
                 if (msg != null && msg.target == null) {
                     // Stalled by a barrier.  Find the next asynchronous message in the queue.
+                    /*
+                        进入队列的普通消息都是同步的，会根据when的大小依次执行，异步信息一般是硬件中断
+                        相关的信息
+                     */
                     do {
                         prevMsg = msg;
                         msg = msg.next;
@@ -229,5 +246,205 @@ boolean enqueueMessage(Message msg, long when) {
             nextPollTimeoutMillis = 0;
         }
     }
+```
+
+## Looper.pollOnce
+```
+int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData) {
+    int result = 0;
+    for (;;) {
+        while (mResponseIndex < mResponses.size()) {
+            const Response& response = mResponses.itemAt(mResponseIndex++);
+            int ident = response.request.ident;
+            if (ident >= 0) {
+                int fd = response.request.fd;
+                int events = response.events;
+                void* data = response.request.data;
+#if DEBUG_POLL_AND_WAKE
+                ALOGD("%p ~ pollOnce - returning signalled identifier %d: "
+                        "fd=%d, events=0x%x, data=%p",
+                        this, ident, fd, events, data);
+#endif
+                if (outFd != NULL) *outFd = fd;
+                if (outEvents != NULL) *outEvents = events;
+                if (outData != NULL) *outData = data;
+                return ident;
+            }
+        }
+
+        if (result != 0) {
+#if DEBUG_POLL_AND_WAKE
+            ALOGD("%p ~ pollOnce - returning result %d", this, result);
+#endif
+            if (outFd != NULL) *outFd = 0;
+            if (outEvents != NULL) *outEvents = 0;
+            if (outData != NULL) *outData = NULL;
+            return result;
+        }
+
+        result = pollInner(timeoutMillis);
+    }
+}
+```
+
+## Looper.pollInner
+```
+int Looper::pollInner(int timeoutMillis) {
+#if DEBUG_POLL_AND_WAKE
+    ALOGD("%p ~ pollOnce - waiting: timeoutMillis=%d", this, timeoutMillis);
+#endif
+
+    // Adjust the timeout based on when the next message is due.
+    if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
+        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        int messageTimeoutMillis = toMillisecondTimeoutDelay(now, mNextMessageUptime);
+        if (messageTimeoutMillis >= 0
+                && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
+            timeoutMillis = messageTimeoutMillis;
+        }
+#if DEBUG_POLL_AND_WAKE
+        ALOGD("%p ~ pollOnce - next message in %" PRId64 "ns, adjusted timeout: timeoutMillis=%d",
+                this, mNextMessageUptime - now, timeoutMillis);
+#endif
+    }
+
+    // Poll.
+    int result = POLL_WAKE;
+    mResponses.clear();
+    mResponseIndex = 0;
+
+    // We are about to idle.
+    mPolling = true;
+
+    struct epoll_event eventItems[EPOLL_MAX_EVENTS];
+    int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
+
+    // No longer idling.
+    mPolling = false;
+
+    // Acquire lock.
+    mLock.lock();
+
+    // Rebuild epoll set if needed.
+    if (mEpollRebuildRequired) {
+        mEpollRebuildRequired = false;
+        rebuildEpollLocked();
+        goto Done;
+    }
+
+    // Check for poll error.
+    if (eventCount < 0) {
+        if (errno == EINTR) {
+            goto Done;
+        }
+        ALOGW("Poll failed with an unexpected error: %s", strerror(errno));
+        result = POLL_ERROR;
+        goto Done;
+    }
+
+    // Check for poll timeout.
+    if (eventCount == 0) {
+#if DEBUG_POLL_AND_WAKE
+        ALOGD("%p ~ pollOnce - timeout", this);
+#endif
+        result = POLL_TIMEOUT;
+        goto Done;
+    }
+
+    // Handle all events.
+#if DEBUG_POLL_AND_WAKE
+    ALOGD("%p ~ pollOnce - handling events from %d fds", this, eventCount);
+#endif
+
+    for (int i = 0; i < eventCount; i++) {
+        int fd = eventItems[i].data.fd;
+        uint32_t epollEvents = eventItems[i].events;
+        if (fd == mWakeEventFd) {
+            if (epollEvents & EPOLLIN) {
+                awoken();
+            } else {
+                ALOGW("Ignoring unexpected epoll events 0x%x on wake event fd.", epollEvents);
+            }
+        } else {
+            ssize_t requestIndex = mRequests.indexOfKey(fd);
+            if (requestIndex >= 0) {
+                int events = 0;
+                if (epollEvents & EPOLLIN) events |= EVENT_INPUT;
+                if (epollEvents & EPOLLOUT) events |= EVENT_OUTPUT;
+                if (epollEvents & EPOLLERR) events |= EVENT_ERROR;
+                if (epollEvents & EPOLLHUP) events |= EVENT_HANGUP;
+                pushResponse(events, mRequests.valueAt(requestIndex));
+            } else {
+                ALOGW("Ignoring unexpected epoll events 0x%x on fd %d that is "
+                        "no longer registered.", epollEvents, fd);
+            }
+        }
+    }
+Done: ;
+
+    // Invoke pending message callbacks.
+    mNextMessageUptime = LLONG_MAX;
+    while (mMessageEnvelopes.size() != 0) {
+        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        const MessageEnvelope& messageEnvelope = mMessageEnvelopes.itemAt(0);
+        if (messageEnvelope.uptime <= now) {
+            // Remove the envelope from the list.
+            // We keep a strong reference to the handler until the call to handleMessage
+            // finishes.  Then we drop it so that the handler can be deleted *before*
+            // we reacquire our lock.
+            { // obtain handler
+                sp<MessageHandler> handler = messageEnvelope.handler;
+                Message message = messageEnvelope.message;
+                mMessageEnvelopes.removeAt(0);
+                mSendingMessage = true;
+                mLock.unlock();
+
+#if DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS
+                ALOGD("%p ~ pollOnce - sending message: handler=%p, what=%d",
+                        this, handler.get(), message.what);
+#endif
+                handler->handleMessage(message);
+            } // release handler
+
+            mLock.lock();
+            mSendingMessage = false;
+            result = POLL_CALLBACK;
+        } else {
+            // The last message left at the head of the queue determines the next wakeup time.
+            mNextMessageUptime = messageEnvelope.uptime;
+            break;
+        }
+    }
+
+    // Release lock.
+    mLock.unlock();
+
+    // Invoke all response callbacks.
+    for (size_t i = 0; i < mResponses.size(); i++) {
+        Response& response = mResponses.editItemAt(i);
+        if (response.request.ident == POLL_CALLBACK) {
+            int fd = response.request.fd;
+            int events = response.events;
+            void* data = response.request.data;
+#if DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS
+            ALOGD("%p ~ pollOnce - invoking fd event callback %p: fd=%d, events=0x%x, data=%p",
+                    this, response.request.callback.get(), fd, events, data);
+#endif
+            // Invoke the callback.  Note that the file descriptor may be closed by
+            // the callback (and potentially even reused) before the function returns so
+            // we need to be a little careful when removing the file descriptor afterwards.
+            int callbackResult = response.request.callback->handleEvent(fd, events, data);
+            if (callbackResult == 0) {
+                removeFd(fd, response.request.seq);
+            }
+
+            // Clear the callback reference in the response structure promptly because we
+            // will not clear the response vector itself until the next poll.
+            response.request.callback.clear();
+            result = POLL_CALLBACK;
+        }
+    }
+    return result;
+}
 ```
 
