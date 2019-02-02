@@ -10,7 +10,28 @@ frameworks/base/core/jni/android_os_MessageQueue.cpp
 
 system/core/include/utils/Looper.h
 system/core/libutils/Looper.cpp
+
+bionic/libc/include/sys/eventfd.h
+kernel/fs/eventfd.c
+
+system/core/include/utils/threads.h
+system/core/include/cutils/threads.h
+system/core/libcutils/threads.c
+
+system/core/include/utils/RefBase.h
+system/core/libutils/RefBase.cpp
 ```
+
+1. epoll
+2. fdevent
+3. pthread
+
+Thread Local Data.
+`pthread_once()`//保证只执行一次，具体那个线程执行由内核决定。
+`pthread_key_create(&pthread_key_t)`//创建键值
+`pthread_setspecific(pthread_key_t,void*)`//设置键值
+`void *pthread_getspecific(pthread_key_t)`//获取键值
+
 
 作为一个`MessageQueue`的基本方法：`入队(enqueue)`和`出队(dequeue)`：
 ```
@@ -294,6 +315,11 @@ for (size_t i = 0; i < mRequests.size(); i++) {
         }
     }
 ```
+`Looper::addFd()`方法会从`mRequests`中add新的Request，`Looper::removeFd()`方法会从`mRequests`中remove指定
+的Request。在`addFd`的时候，通过`epoll_ctl()`的 `EPOLL_CTL_ADD`添加`Fd`。如果`Fd`对应的Request已经存在`mRequests`中，
+则会通过`EPOLL_CTL_MOD`更新`Fd`，更新遇到`ENOENT`的话，就调用`rebuildEpollLocked()`从新创建`epoll instance`。否则`addFd()`
+操作失败。`removeFd()`的操作与`addFd()`的操作基本类似。
+
 
 
 ```c++
