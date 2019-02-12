@@ -1,146 +1,118 @@
-# MessageQueue和Message
+# Android消息机制
 
-代码位置:
-```
-frameworks/base/core/java/android/os/MessageQueue.java
-frameworks/base/core/java/android/os/Message.java
-
-frameworks/base/core/jni/android_os_MessageQueue.h
-frameworks/base/core/jni/android_os_MessageQueue.cpp
-
-system/core/include/utils/Looper.h
-system/core/libutils/Looper.cpp
-
-bionic/libc/include/sys/eventfd.h
-kernel/fs/eventfd.c
-
-system/core/include/utils/threads.h
-system/core/include/cutils/threads.h
-system/core/libcutils/threads.c
-
-system/core/include/utils/RefBase.h
-system/core/libutils/RefBase.cpp
+## epoll
+```c
+int epoll_create (int/*size*/)
+int epoll_ctl (int/*epfd*/, int/*operation*/, int/*fd*/,struct epoll_event * /*events*/)
+int epoll_wait (int/*epfd*/, struct epoll_event * /*events*/,int/*max size*/, int/*timeout*/)
 ```
 
-1. epoll
-2. fdevent
-3. pthread
+## eventfd
+```c
+int eventfd (int /*count*/, int/*flags*/)
+int eventfd_read (int /*fd*/, eventfd_t * /*value*/) //down
+int eventfd_write (int /*fd*/, eventfd_t /*value*/) //up
+```
+flags
 
+    EFD_CLOEXEC
+    EFD_NONBLOCK
+    EFD_SEMAPHORE
+
+## pthread
 Thread Local Data.
-`pthread_once()`//保证只执行一次，具体那个线程执行由内核决定。
-`pthread_key_create(&pthread_key_t)`//创建键值
-`pthread_setspecific(pthread_key_t,void*)`//设置键值
-`void *pthread_getspecific(pthread_key_t)`//获取键值
-
+```c
+void pthread_once() //保证只执行一次，具体那个线程执行由内核决定。
+void pthread_key_create(&pthread_key_t) //创建键值
+void pthread_setspecific(pthread_key_t,void*) //设置键值
+void *pthread_getspecific(pthread_key_t) //获取键值
+```
 
 作为一个`MessageQueue`的基本方法：`入队(enqueue)`和`出队(dequeue)`：
-```
-// 入队
+```java
 boolean enqueueMessage(Message msg, long when)
-// 出队
 Message next()
 ```
 既然涉及到队列，一般有两种实现方式：`链表(linklist)`和`数组(array)`
 
 `Message`作为`MessageQueue`中的元素，而且`MessageQueue`采用`链表(linklist)`实现。所以，
 `Message`内部会有`next`指向下一个`Message`对象：
-```
+```java
 class Message {
     Message next;
 }
 ```
-
-## MessageQueue入队操作
+## MessageQueue
+### MessageQueue入队操作
 `MessageQueue`的入队方法`enqueueMessage(Message msg, long when)`多了一个参数`long when`。请注意，`when`默认是`Message`进入队列的时间，同时也是
-`Message`期望被处理的时间，请在这儿停顿并思考5秒钟。队列中的`Message`根据`when`由小到大排序，`when`越小，在队列中的位置越靠前面。这里的`when`为`android.os.SystemClock.uptimeMillis()`。所以，
+`Message`期望被处理的时间。队列中的`Message`根据`when`由小到大排序，`when`越小，在队列中的位置越靠前面。这里的`when`为`android.os.SystemClock.uptimeMillis()`。所以，
 正常情况下，`when > 0`，当然也存在`when = 0`的情况，当`msg`的`when == 0`的时候，`msg`会成为队列的`head`节点。
 
 当调用`Handler.sendMessageAtFrontOfQueue(Message msg)`时候，会调用`MessageQueue.enqueueMessage(Message msg, long when)`，
 这里传递的`when=0`，所以这里的`msg`会成为队列的`head`节点。
 
 `enqueueMessage`方法解析：
-```
+```java
 boolean enqueueMessage(Message msg, long when) {
-        if (msg.target == null) { //msg.target是消息的目的地，其实就是Handler
-            throw new IllegalArgumentException("Message must have a target.");
-        }
-        if (msg.isInUse()) {
-            throw new IllegalStateException(msg + " This message is already in use.");
-        }
-
-        synchronized (this) { // this为MessageQueue对象
-            if (mQuitting) {
-                IllegalStateException e = new IllegalStateException(
-                        msg.target + " sending message to a Handler on a dead thread");
-                Log.w(TAG, e.getMessage(), e);
-                msg.recycle();
-                return false;
-            }
-
-            msg.markInUse();
-            msg.when = when;
-            Message p = mMessages;// mMessages是链表的head
-            boolean needWake;
-            /*1111111111111111111111111111111111111111111*/
-            if (p == null || when == 0 || when < p.when) {
-                // New head, wake up the event queue if blocked.
-                /*
-                    这里有三个条件:
-                        1.p == null //p(p = mMessages)是head节点，head为null,说明链表为空，这时进入链表的节点就直接成为head节点(New Head)
-                        2.when == 0 //调用sendMessageAtFrontOfQueue时，when=0，表示进来的msg需要成为head结点(New Head)
-                        3.when < p.when //新进入链表的msg.when < head.when，所以新进入的消息成为head，head.when是整个链表中最小的(New Head)
-                 */
-                msg.next = p;
-                mMessages = msg;
-                
-                /* 
-                 * mBlocked为true时，说明此时msg都被处理完了，head结点插入后，需要叫醒工作线程，通知有新的msg要处理。
-                 */
-                needWake = mBlocked;
-            } 
-            /*1111111111111111111111111111111111111111111*/
+    synchronized (this) { // this为MessageQueue对象
+        msg.markInUse();
+        msg.when = when;
+        Message p = mMessages;// mMessages是链表的head
+        boolean needWake;
+        /*111*/
+        if (p == null || when == 0 || when < p.when) {
+            // New head, wake up the event queue if blocked.
+            /*
+                这里有三个条件:
+                    1.p == null //p(p = mMessages)是head节点，head为null,说明链表为空，这时进入链表的节点就直接成为head节点(New Head)
+                    2.when == 0 //调用sendMessageAtFrontOfQueue时，when=0，表示进来的msg需要成为head结点(New Head)
+                    3.when < p.when //新进入链表的msg.when < head.when，所以新进入的消息成为head，head.when是整个链表中最小的(New Head)
+             */
+            msg.next = p;
+            mMessages = msg;
             
+            /* 
+             * mBlocked为true时，说明此时msg都被处理完了，head结点插入后，需要叫醒工作线程，通知有新的msg要处理。
+             */
+            needWake = mBlocked;
+        } 
+        /*111*/
             
-            /*222222222222222222222222222222222222222222*/
-            else {
-                /*
-                    msg链表插入
-                
-                 */
-                // Inserted within the middle of the queue.  Usually we don't have to wake
-                // up the event queue unless there is a barrier at the head of the queue
-                // and the message is the earliest asynchronous message in the queue.
-                needWake = mBlocked && p.target == null && msg.isAsynchronous();
-                Message prev;
-                for (;;) {
-                    prev = p;
-                    p = p.next;
-                    if (p == null || when < p.when) {
-                        /*
-                           1. p==null,说明msg被插在队列的最后面
-                           2. when < p.when,找到when的插入位置
-                         */
-                        break;
-                    }
-                    if (needWake && p.isAsynchronous()) {
-                        needWake = false;
-                    }
+        /*222*/
+        else {
+            // Inserted within the middle of the queue.  Usually we don't have to wake
+            // up the event queue unless there is a barrier at the head of the queue
+            // and the message is the earliest asynchronous message in the queue.
+            needWake = mBlocked && p.target == null && msg.isAsynchronous();
+            Message prev;
+            for (;;) {
+                prev = p;
+                p = p.next;
+                if (p == null || when < p.when) {
+                    /*
+                       1. p==null,说明msg被插在队列的最后面
+                       2. when < p.when,找到when的插入位置
+                     */
+                    break;
                 }
-                msg.next = p; // invariant: p == prev.next
-                prev.next = msg;
+                if (needWake && p.isAsynchronous()) {
+                    needWake = false;
+                }
             }
-            /*222222222222222222222222222222222222222222*/
-
-
-            /*33333333333333333333333333333333333333333333333333*/
-            // We can assume mPtr != 0 because mQuitting is false.
-            if (needWake) {
-                nativeWake(mPtr);
-            }
-            /*33333333333333333333333333333333333333333333333333*/
+            msg.next = p; // invariant: p == prev.next
+            prev.next = msg;
         }
-        return true;
+        /*222*/
+
+        /*333*/
+        // We can assume mPtr != 0 because mQuitting is false.
+        if (needWake) {
+            nativeWake(mPtr);
+        }
+        /*333*/
     }
+    return true;
+}
 ```
 从代码结构上面来看，代码大体分为3个部分：`/*111*/`，`/*222*/`和`/*333*/`，其中`/*111*/`、`/*222*/`是队列的插入操作，也就是说有新的`Message`
 进入队列，`/*333*/`决定是否唤醒工作线程。
@@ -149,17 +121,14 @@ boolean enqueueMessage(Message msg, long when) {
 
 ![111](image/MessageQueue1.png)
 
-## MessageQueue出队操作
+### MessageQueue出队操作
 在`next`方法中，有个非常重要的变量:`nextPollTimeoutMillis`，这是`epoll_wait`的一个超时参数，详细介绍请自行查阅相关资料。
-```
+```java
     Message next() {
         // Return here if the message loop has already quit and been disposed.
         // This can happen if the application tries to restart a looper after quit
         // which is not supported.
         final long ptr = mPtr;
-        if (ptr == 0) {
-            return null;
-        }
 
         int pendingIdleHandlerCount = -1; // -1 only during first iteration
         int nextPollTimeoutMillis = 0;
@@ -169,9 +138,6 @@ boolean enqueueMessage(Message msg, long when) {
                 第一次进入for(;;)的时候，nextPollTimeoutMillis = 0，
                 nativePollOnce会一直阻塞，直到相应的fd被触发。
              */
-            if (nextPollTimeoutMillis != 0) {
-                Binder.flushPendingCommands();
-            }
 
             /*
             
@@ -282,8 +248,8 @@ boolean enqueueMessage(Message msg, long when) {
 这个`epoll instance`，称这个对象为`mEpollFd`。这个最多监控`EPOLL_SIZE_HINT=8`个数的`fd`，也可以说，`mEpollFd`
 能监控八路IO上面的事件。
 
-```c++
-mEpollFd = epoll_create(EPOLL_SIZE_HINT);
+```c
+int mEpollFd = epoll_create(EPOLL_SIZE_HINT);
 ```
 
 ### 创建并添加wakeFd到epoll实例
@@ -361,7 +327,7 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
 ```
 
 ## Looper.pollInner
-```
+```c++
 int Looper::pollInner(int timeoutMillis) {
 #if DEBUG_POLL_AND_WAKE
     ALOGD("%p ~ pollOnce - waiting: timeoutMillis=%d", this, timeoutMillis);
@@ -520,5 +486,27 @@ Done: ;
     }
     return result;
 }
+```
+
+## 代码位置
+```
+frameworks/base/core/java/android/os/MessageQueue.java
+frameworks/base/core/java/android/os/Message.java
+
+frameworks/base/core/jni/android_os_MessageQueue.h
+frameworks/base/core/jni/android_os_MessageQueue.cpp
+
+system/core/include/utils/Looper.h
+system/core/libutils/Looper.cpp
+
+bionic/libc/include/sys/eventfd.h
+kernel/fs/eventfd.c
+
+system/core/include/utils/threads.h
+system/core/include/cutils/threads.h
+system/core/libcutils/threads.c
+
+system/core/include/utils/RefBase.h
+system/core/libutils/RefBase.cpp
 ```
 
