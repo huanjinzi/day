@@ -32,6 +32,12 @@ htpasswd -c etc/passwords admin
 git commit --amend --author='yuanhuan <yuanhuan@skyworth.com>'
 git remote add origin ssh://yuanhuan@192.168.1.164:29418/coocaa
 git branch --set-upstream-to=origin/<branch> master
+
+//更新子模块
+git submodule init
+git submodule update
+
+git clone --recursive repository.git
 ````
 
 ## jenkins
@@ -175,7 +181,11 @@ little endian 和 big endian
 
 ## 网络下载
 ```
-wget -c https://mirrors.tuna.tsinghua.edu.cn/aosp-monthly/aosp-latest.tar // -c contine实现断点续传
+wget -c https://mirrors.tuna.tsinghua.edu.cn/aosp-monthly/aosp-latest.tar 
+
+-c contine实现断点续传
+-O 下载文件名字
+--post-data="key=xx&value=xx"
 
 ```
 
@@ -225,6 +235,9 @@ xhr.send(form);
 ```
 // -F表示form -X POST
 curl -F 'file=@/tmp/example.ipa' -F '_api_key=5e36337b4730e0ee0fbb4bfa83242816' https://www.pgyer.com/apiv2/app/upload
+
+-o 下载文件名字
+--progress 进度
 ```
 
 ## keytool
@@ -253,5 +266,38 @@ signingConfigs {
     }
 signingConfig signingConfigs.release
 ```
+
+## Android.mk预编译apk
+```
+LOCAL_PATH := $(call my-dir)
+
+# Voice Assistant
+include $(CLEAR_VARS)
+LOCAL_MODULE := VoiceAssistant
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_TAGS := optional
+LOCAL_BUILT_MODULE_STEM := package.apk
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_CERTIFICATE := platform
+#LOCAL_CERTIFICATE := PRESIGNED
+#LOCAL_DEX_PREOPT := false
+#LOCAL_PRIVILEGED_MODULE := true
+#LOCAL_OVERRIDES_PACKAGES := Home Launcher2 Launcher3
+#LOCAL_MULTILIB := 32
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+
+include $(BUILD_PREBUILT)
+```
+
+## 压缩包预览
+```
+zip -v file.zip
+```
+
+## 远程桌面
+```
+rdesktop -f 192.168.1.129
+```
+windows需要关闭允许网络级别的认证
 
 
