@@ -40,6 +40,60 @@ git submodule update
 git clone --recursive repository.git
 ````
 
+## git多仓库管理
+
+### repo
+
+```
+repo init -u url [options]
+```
+Options:
+
+    -u: Specify a URL from which to retrieve a manifest repository. The common manifest is found at https://android.googlesource.com/platform/manifest
+
+    -m: Select a manifest file within the repository. If no manifest name is selected, the default is default.xml.
+
+    -b: Specify a revision, that is, a particular manifest-branch.
+
+
+```
+repo sync [project-list]
+```
+
+```
+git fetch -all/git remote update
+git rebase origin/branch
+```
+
+```
+repo forall [project-list] -c command
+```
+Options:
+
+    -c: Command and arguments to execute. The command is evaluated through /bin/sh and any arguments after it are passed through as shell positional parameters.
+
+    -p: Show project headers before output of the specified command. This is achieved by binding pipes to the command's stdin, stdout, and sterr streams, and piping all output into a continuous stream that is displayed in a single pager session.
+
+    -v: Show messages the command writes to stderr.
+
+
+### gclient
+工具位置
+```
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools
+```
+
+```
+gclient revinfo
+```
+查看git库信息
+```
+src: https://chromium.googlesource.com/chromium/src.git
+src/buildtools: https://chromium.googlesource.com/chromium/buildtools.git@9a90d9aaadeb5e04327ed05775f45132e4b3523f
+```
+可以看到`@9a90d9aaadeb5e04327ed05775f45132e4b3523f`是节点信息，代码布局为`$ROOT/src`，`$ROOT/src/buildtools`
+
+
 ## jenkins
 ```
 java -jar jenkins.war --httpPort=8082
