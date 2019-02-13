@@ -203,7 +203,7 @@ sudo lsof -i:8080
 sudo ifconfig eno1 192.168.1.172 //修改IP，重启失效
 ```
 
-## Gerrit
+## gerrit
 ````
 java -jar gerrit-2.16.2.war init --batch -d ./review_site //gerrit初始化
 
@@ -353,5 +353,12 @@ zip -v file.zip
 rdesktop -f 192.168.1.129
 ```
 windows需要关闭允许网络级别的认证
+
+## Android Studio
+没有语法提示
+
+. 菜单`File`->`Invalidate Caches/Restart...`
+. 省电模式
+
 
 
