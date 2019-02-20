@@ -3,12 +3,20 @@
 sudo dpkg -i xx.deb //
 sudo apt-get -f -y --allow-unauthenticated install
 
+// -y --yes, --assume-yes Automatic yes to prompts; assume "yes" as answer to all prompts and run non-interactively.
+// -f --fix-broken Fix; attempt to correct a system with broken dependencies in place.
+
 /var/cache/apt/archives //默认下载位置
 /usr/share //默认安装位置
 /usr/bin //可执行文件位置
 /etc //配置文件位置
 /usr/lib //lib文件位置
 ````
+
+## bash
+```
+bash -c "pwd"
+```
 
 ## Gerrit
 
@@ -138,13 +146,34 @@ adb shell dumpsys activity service com.svr.va/.core.VAService
 `````
 ## 文本处理与编辑
 ````
+column -t -s ":"
+sed s/^/chromium_/ 在行首插入
+sed s/$/chromium_/ 在行尾插入
+
+sed "s/^/chromium\//" 插入特殊字符
+
+sed a\chromium_ 在行首插入新行
+sed a\chromium_ 在行尾插入新行
+
 awk '{print $1}' //打印第一列的数据
 awk '{if(NR==1) print}' //打印第一行的数据,NR行号，NF列数，
 ````
-## 文件查找
+## find
 ````
 find ./native_client -depth -iname .git //查找git仓库，删除加上 | xargs rm -rf
+find ./ -maxdepth 1 -name default_volume_tables.xml //在当前目录查找
 ````
+
+## ls
+```
+ls -l //查看文件列表
+
+```
+
+##解压
+```
+tar -C /usr/local -xzf go1.11.5.linux-amd64.tar.gz
+```
 
 ## ssh
 ````
@@ -212,6 +241,8 @@ java -jar gerrit-2.16.2.war init --batch -d ./review_site //gerrit初始化
 // 29418
 ssh -p 29999 admin@192.168.1.172 gerrit //gerrit命令
 ssh -p 29999 jenkins@192.168.1.172 gerrit review 2ab71c27e198f460c173f963bac34292df521cb5 --verified 1
+ssh -p 29999 admin@192.168.1.172 delete-project delete Chromium --yes-really-delete --force  //删除项目
+cat ~/.gclient_entries | grep src/ | column -t -s \' | awk '{print $1}' | column -t -s : | awk '{print $1}' | sed "s/^/ chromium\//" | xargs bash -c
 
 // add maven
 repositories {
@@ -240,6 +271,10 @@ wget -c https://mirrors.tuna.tsinghua.edu.cn/aosp-monthly/aosp-latest.tar
 -c contine实现断点续传
 -O 下载文件名字
 --post-data="key=xx&value=xx"
+--no-check-certificate //关闭证书验证
+-O- -q //输出到屏幕 -qO-
+
+wget https://192.168.1.113:10443/api/getCategoryList --post-data="apiKey=321324dsfdsfs1233sasd" --no-check-certificate
 
 ```
 
@@ -248,10 +283,6 @@ wget -c https://mirrors.tuna.tsinghua.edu.cn/aosp-monthly/aosp-latest.tar
 ls -i //查看inode
 ```
 
-## 服务器
-```
-java -jar jenkins.war&
-```
 
 ## bcdboot
 ```
@@ -299,7 +330,11 @@ curl -F 'file=@/tmp/example.ipa' -F '_api_key=5e36337b4730e0ee0fbb4bfa83242816' 
 // -keyalg RSA -keysize 2048 -validity 10000
 keytool -genkey -v -alias "github" -keyalg "RSA" -keystore "huanjinzi.keystore" //创建keystore，包含一个叫github的keypair
 keytool -list -keystore "huanjinzi.keystore" // 如果keystore有密码的话，需要输入密码
-keytool 
+keytool -export -alias github -file test.crt -keystore huanjinzi.keystore //提取证书
+
+
+keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -deststoretype PKCS12 //keystore类型转换
+openssl pkcs12 -in keystore.p12 -nokeys -out my_key_store.crt //导出证书
 ```
 
 ## apk release
@@ -361,4 +396,60 @@ windows需要关闭允许网络级别的认证
 . 省电模式
 
 
+## NDK
+```
+APP_STL := c++_static
+APP_LDFLAGS := -L/home/huanjinzi/workspace/project/8895A71/out/target/product/hmd8895/obj_arm/lib //链接动态库
+```
+
+## mysql
+```
+mysql -u root -p
+
+use mysql;
+select host,user,authentication_string from user;
+
+grant all privileges on appstore.* to 'appstore'@'%' identified by 'appstore'; // 创建appstore用户，并且分配权限
+show grants for appstore; // 查看appstore的权限
+
+revoke insert on appstore.* from 'appstore'@'%'; //收回insert权限
+flush privileges; //刷新权限
+
+help contents //帮助文档
+
+mysql -h 192.168.1.172 -P 3306 -u appstore -p
+
+//远程连接问题
+sudo vim  /etc/mysql/mysql.conf.d/mysqld.cnf
+
+// 中文问题
+sudo vim /etc/mysql/conf.d/mysql.cnf
+　　
+[mysql]
+default-character-set=utf8
+[mysqld]
+character-set-server=utf8
+
+// 一定要注意，这里是utf8，不是utf-8
+
+drop database xxxx; //删除数据库
+#bind-address		= 127.0.0.1 //注释
+GRANT ALL PRIVILEGES ON *.* TO 'username'@'192.168.10.83' IDENTIFIED BY 'password' WITH GRANT OPTION;
+
+CREATE DATABASE appstore;
+
+show create table appstore_app_info;
+alter table appstore_app_info default character set utf8;
+
+```
+
+## Libreoffice
+```
+sudo add-apt-repository ppa:libreoffice/ppa
+sudo apt-get update && sudo apt-get -y dist-upgrade
+sudo apt-get install libreoffice
+
+// dist-upgrade in addition to performing the function of upgrade, 
+// also intelligently handles changing dependencies with new versions of packages;
+```
 
