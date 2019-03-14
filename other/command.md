@@ -146,6 +146,14 @@ adb shell dumpsys activity service com.svr.va/.core.VAService
 `````
 ## 文本处理与编辑
 ````
+//文件浏览
+wc -l //查看文件行数
+head -n10
+tail -n+10
+tail -n10
+tail -n+10 | head //第10行到第20行
+less more//浏览
+
 column -t -s ":"
 sed s/^/chromium_/ 在行首插入
 sed s/$/chromium_/ 在行尾插入
@@ -325,12 +333,23 @@ curl -F 'file=@/tmp/example.ipa' -F '_api_key=5e36337b4730e0ee0fbb4bfa83242816' 
 --progress 进度
 ```
 
+## unzip
+```
+unzip -l file.zip //查看文件列表
+unzip VoiceAssistant.apk META-INF/CERT.RSA 解压指定文件
+
+zip -r foo.zip META-INF/ // 压缩META-INF/ 文件夹到foo.zip
+```
+
 ## keytool
 ```
 // -keyalg RSA -keysize 2048 -validity 10000
 keytool -genkey -v -alias "github" -keyalg "RSA" -keystore "huanjinzi.keystore" //创建keystore，包含一个叫github的keypair
 keytool -list -keystore "huanjinzi.keystore" // 如果keystore有密码的话，需要输入密码
 keytool -export -alias github -file test.crt -keystore huanjinzi.keystore //提取证书
+
+keytool -printcert -file CERT.RSA
+openssl pkcs7 -inform DER -in META-INF/CERT.RSA -noout -print_certs -text
 
 
 keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -deststoretype PKCS12 //keystore类型转换
@@ -404,13 +423,22 @@ APP_LDFLAGS := -L/home/huanjinzi/workspace/project/8895A71/out/target/product/hm
 
 ## mysql
 ```
+sudo vim /etc/mysql/debian.cnf
+mysql -udebian-sys-maint -p
+
 mysql -u root -p
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
 
 use mysql;
 select host,user,authentication_string from user;
-
+select user,plugin from user; // auth_socket
+update user set authentication_string =password('root'),plugin='mysql_native_password' where user='root'; //将auth_socket改为msyql_native_password
+sudo service mysql restart //以上修改需要重启生效
 grant all privileges on appstore.* to 'appstore'@'%' identified by 'appstore'; // 创建appstore用户，并且分配权限
 show grants for appstore; // 查看appstore的权限
+show databases;
+UPDATE user SET authentication_string=PASSWORD('root') where USER='root'; //修改密码
+
 
 revoke insert on appstore.* from 'appstore'@'%'; //收回insert权限
 flush privileges; //刷新权限
@@ -419,9 +447,6 @@ help contents //帮助文档
 
 mysql -h 192.168.1.172 -P 3306 -u appstore -p
 
-//远程连接问题
-sudo vim  /etc/mysql/mysql.conf.d/mysqld.cnf
-
 // 中文问题
 sudo vim /etc/mysql/conf.d/mysql.cnf
 　　
@@ -429,17 +454,33 @@ sudo vim /etc/mysql/conf.d/mysql.cnf
 default-character-set=utf8
 [mysqld]
 character-set-server=utf8
-
+show variables like '%char%' //查看数据库编码
+show create database appstore; //查看数据库创建指令
+show create table appstore_category; //查看数据表创建指令
+alter database appstore character set utf8; //修改数据库编码
+alter table appstore_category charset=utf8; //修改数据表编码
+alter table appstore_category convert to character set utf8; //修改数据表编码
+alter table appstore_category [column]... character set utf8;
 // 一定要注意，这里是utf8，不是utf-8
 
 drop database xxxx; //删除数据库
-#bind-address		= 127.0.0.1 //注释
-GRANT ALL PRIVILEGES ON *.* TO 'username'@'192.168.10.83' IDENTIFIED BY 'password' WITH GRANT OPTION;
 
-CREATE DATABASE appstore;
+//远程连接问题
+sudo vim  /etc/mysql/mysql.conf.d/mysqld.cnf
+// #bind-address		= 127.0.0.1 //注释
+SELECT DISTINCT CONCAT('User: ''',user,'''@''',host,''';') AS query FROM mysql.user;
+GRANT ALL PRIVILEGES ON *.* TO 'username'@'192.168.10.83' IDENTIFIED BY 'password' WITH GRANT OPTION;
+flush privileges;
+
+show global variables like 'port'; // 常看端口号
+CREATE DATABASE appstore; // 创建数据库
 
 show create table appstore_app_info;
 alter table appstore_app_info default character set utf8;
+
+//修改mysql默认端口
+vi /etc/my.cnf
+port=3306
 
 ```
 
@@ -451,5 +492,33 @@ sudo apt-get install libreoffice
 
 // dist-upgrade in addition to performing the function of upgrade, 
 // also intelligently handles changing dependencies with new versions of packages;
+```
+
+## 进程
+```
+pstree //进程树查看
+pstree -apl [pid] //查看进程线程
+ps -Lf 915 //查看进程线程
+
+```
+
+## centos防火墙
+```
+netstat -ntpl | grep 3306
+
+firewall-cmd --state
+systemctl start firewalld.service
+firewall-cmd --list-ports
+firewall-cmd --permanent --zone=public --add-port=8080/tcp
+firewall-cmd --reload
+
+iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 3306 -j ACCEPT
+iptables -L -n
+iptables -D INPUT -p tcp -m state --state NEW -m tcp --dport 3306 -j ACCEPT
+```
+
+## 创建空文件
+```
+dd if=/dev/zero of=test_file bs=100M count=1
 ```
 
