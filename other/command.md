@@ -1,3 +1,9 @@
+## 环境变量
+```
+$USER //用户名
+$? //上次命令执行的结果
+```
+
 ## apt
 ````
 sudo dpkg -i xx.deb //
@@ -12,6 +18,15 @@ sudo apt-get -f -y --allow-unauthenticated install
 /etc //配置文件位置
 /usr/lib //lib文件位置
 ````
+## ln
+```
+ln -s /home/huanjinzi/go/src/cms/cms-backend /home/huanjinzi/cms
+
+1.确保 /home/huanjinzi/cms 不存在
+2.上面的命令执行后的效果
+cd /home/huanjinzi/go/src/cms/cms-backend 与 cd /home/huanjinzi/cms 有相同的效果
+```
+
 
 ## bash
 ```
@@ -46,6 +61,12 @@ git submodule init
 git submodule update
 
 git clone --recursive repository.git
+
+git rebase -i HEAD~4 // fixup squash将会合并commit
+
+
+//创建新分支
+git checkout -b|B 
 ````
 
 ## git多仓库管理
@@ -456,11 +477,17 @@ default-character-set=utf8
 character-set-server=utf8
 show variables like '%char%' //查看数据库编码
 show create database appstore; //查看数据库创建指令
-show create table appstore_category; //查看数据表创建指令
+show create table appstore_category; //查看数据表创建命令
 alter database appstore character set utf8; //修改数据库编码
 alter table appstore_category charset=utf8; //修改数据表编码
 alter table appstore_category convert to character set utf8; //修改数据表编码
 alter table appstore_category [column]... character set utf8;
+
+desc [table]; //查看表结构
+show create table [table] //查看表创建命令
+select * from cms_r_video_info where channel=0 order by id asc; //查询结果排序
+UPDATE runoob_tbl SET runoob_title='学习 C++' WHERE runoob_id=3;
+
 // 一定要注意，这里是utf8，不是utf-8
 
 drop database xxxx; //删除数据库
@@ -521,4 +548,37 @@ iptables -D INPUT -p tcp -m state --state NEW -m tcp --dport 3306 -j ACCEPT
 ```
 dd if=/dev/zero of=test_file bs=100M count=1
 ```
+
+## 文件
+```
+file [file]
+
+xxd -l 3 [file]
+xxd -s +2 -l 2
+
+watch //时间间隔执行命令
+
+```
+
+## 正则表达式
+```
+grep -ve [[:digit:]] // -v反向匹配
+```
+
+## cron log
+```
+sudo vim /etc/rsyslog.d/50-default.conf
+cron.*   /var/log/cron.log #将cron前面的注释符去掉
+sudo service rsyslog restart
+tail -f /var/log/cron.log
+
+crontab -l | crontab -
+*/1 * * * * huanjinzi ~/cms/run.sh
+```
+
+## 获取PID
+```
+PID=`netstat -ntpl | grep ${APP} | sed -n 's/.*LISTEN\s\+\([^\/]*\).*/\1/p'`
+```
+
 
