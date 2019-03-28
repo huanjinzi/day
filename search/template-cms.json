@@ -1,0 +1,91 @@
+{
+    "order" : 0,
+    "version" : 60001,
+    "index_patterns" : [
+      "cms-*"
+    ],
+    "settings" : {
+      "index" : {
+        "refresh_interval" : "59s",
+        "analysis": {
+            "analyzer": {
+                "ik_pinyin_analyzer": {
+                    "type": "custom",
+                    "tokenizer": "ik_smart",
+                    "filter": ["my_pinyin", "word_delimiter"]
+                }
+            },
+            "filter": {
+                "my_pinyin": {
+                    "type": "pinyin",
+                    "first_letter": "prefix",
+                    "padding_char": " "
+                }
+            }
+        }
+      }
+    },
+    "mappings" : {
+      "doc" : {
+        "properties" : {
+          "@timestamp" : {
+            "type" : "date"
+          },
+          "@version" : {
+            "type" : "keyword"
+          },
+          
+          "id":{
+            "type":"long"
+          },
+          
+          "name":{
+            "type":"text",
+            "fields": {
+                    "pinyin": {
+                        "type": "text",
+                        "store": "false",
+                        "term_vector": "with_positions_offsets",
+                        "analyzer": "ik_pinyin_analyzer",
+                        "boost": 10
+                    }
+            }
+          },
+          
+          "title":{
+            "type":"text",
+            "analyzer": "ik_max_word",
+            "search_analyzer": "ik_max_word"
+          },
+          
+          "actor":{
+            "type":"text",
+            "fields": {
+                    "pinyin": {
+                        "type": "text",
+                        "store": "false",
+                        "term_vector": "with_positions_offsets",
+                        "analyzer": "ik_pinyin_analyzer",
+                        "boost": 10
+                    }
+            }
+          },
+          
+          "year":{
+            "type":"long"
+          },
+          
+          "score":{
+            "type":"float"
+          },
+          
+          "description":{
+            "type":"text",
+            "analyzer": "ik_max_word",
+            "search_analyzer": "ik_max_word"
+          }
+        }
+      }
+    },
+    "aliases" : { }
+}
