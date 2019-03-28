@@ -17,7 +17,69 @@ sudo apt-get -f -y --allow-unauthenticated install
 /usr/bin //可执行文件位置
 /etc //配置文件位置
 /usr/lib //lib文件位置
+locate /sources.list // 查看source.list
+
+// source.list的存放位置 
+/etc/apt/sources.list
+/etc/apt/sources.list.d/
+
 ````
+
+## source-list
+sources.list 文件中的条目一般都有如下所示的形式：
+```
+deb http://site.example.com/debian distribution component1 component2 component3
+deb-src http://site.example.com/debian distribution component1 component2 component3
+```
+### 档案类型 (Archive type)
+条目的第一个词 `deb` 或是 `deb-src` 表明了所获取的软件包档案类型。
+
+其中，
+
+*. deb 档案类型为二进制预编译软件包，一般我们所用的档案类型。
+*. deb-src 档案类型为用于编译二进制软件包的源代码。
+
+### 仓库地址 (Repository URL)
+条目的第二个词则是软件包所在仓库的地址。我们可以更换仓库地址为其他地理位置更靠近自己的镜像来提高下载速度。
+
+常用镜像地址列表：
+
+```
+Debian
+https://www.debian.org/mirror/list
+Ubuntu
+http://wiki.ubuntu.org.cn/源列表
+```
+
+###发行版 (Distribution)
+跟在仓库地址后的是发行版。发行版有两种分类方法，一类是发行版的具体代号，如 `xenial`,`trusty`, `precise` 等；
+还有一类则是发行版的发行类型，如`oldstable`, `stable`, `testing` 和 `unstable`。
+
+另外，在发行版后还可能有进一步的指定，如 `xenial-updates`, `trusty-security`, `stable-backports` 等。
+
+###软件包分类 (Component)
+跟在发行版之后的就是软件包的具体分类了，可以有一个或多个。
+
+不同的 Linux 发行版对软件有着不同的分类，如：
+
+####Debian
+#####main
+包含符合 DFSG 指导原则的自由软件包，而且这些软件包不依赖不符合该指导原则的软件包。这些软件包被视为 Debian 发型版的一部分。
+#####contrib
+包含符合 DFSG 指导原则的自由软件包，不过这些软件包依赖不在 main 分类中的软件包。
+#####non-free
+包含不符合 DFSG 指导原则的非自由软件包。
+####Ubuntu
+#####main
+官方支持的自由软件。
+#####restricted
+官方支持的非完全自由的软件。
+#####universe
+社区维护的自由软件。
+#####multiverse
+非自由软件。
+
+
 ## ln
 ```
 ln -s /home/huanjinzi/go/src/cms/cms-backend /home/huanjinzi/cms
@@ -373,6 +435,7 @@ keytool -printcert -file CERT.RSA
 openssl pkcs7 -inform DER -in META-INF/CERT.RSA -noout -print_certs -text
 
 
+//keystore没法直接获取私钥，需要转换成 PKCS12再获取私钥
 keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -deststoretype PKCS12 //keystore类型转换
 openssl pkcs12 -in keystore.p12 -nokeys -out my_key_store.crt //导出证书
 ```
@@ -482,6 +545,7 @@ alter database appstore character set utf8; //修改数据库编码
 alter table appstore_category charset=utf8; //修改数据表编码
 alter table appstore_category convert to character set utf8; //修改数据表编码
 alter table appstore_category [column]... character set utf8;
+delete from appstore_apk_res where apk_key like '%';//数据库删除
 
 desc [table]; //查看表结构
 show create table [table] //查看表创建命令
