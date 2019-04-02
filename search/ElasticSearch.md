@@ -20,6 +20,9 @@ elasticsearch中的名字就为`logstash`
 echo 0 > ~/.logstash_jdbc_last_run
 ```
 
+```
+./logstash -f mysql.conf
+```
 ### 常见错误
 ```
 Could not index event to Elasticsearch. {:status=>400, :action=>["index", {:_id=>"6550", :_index=>"cms-video-info", :_type=>"doc", :routing=>nil}, #<LogStash::Event:0x54d65738>], :response=>{"index"=>{"_index"=>"cms-video-info", "_type"=>"doc", "_id"=>"6550", "status"=>400, "error"=>{"type"=>"illegal_argument_exception", "reason"=>"Rejecting mapping update to [cms-video-info] as the final mapping would have more than 1 type: [doc, cms-video-info]"}}}}
