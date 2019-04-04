@@ -6,8 +6,6 @@
 * lwp 线程号
 * tgid 线程组id,等于pid
 
-![](process.png)
-
 一个`lwp`对应一个内核线程，用户级线程绑定到`lwp`，从而被内核调度执行。
 
 ## 调度方式
@@ -26,6 +24,11 @@ cat /proc/915/schedstat
 * 第一个：该进程拥有的cpu的时间
 * 第二个：在对列上的等待时间，即睡眠时间
 * 第三个：被调度的次数
+
+## 互斥实现
+`CAS`实现互斥(乐观锁)
+`Java Synchronized`关键字会挂起线程(悲观锁)，即把线程加入挂起队列(每个资源都会有一个挂起队列)，等资源释放的时候，再把线程加入全局就绪队列等待
+调度，有点像订阅模式。
 
 ## 进程结构
 cat /proc/17064/maps
@@ -80,6 +83,13 @@ ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsysca
 可以看到，`[text]/usr/sbin/mysqld` -> `[heap]` -> `[stack:17979]` -> `[mmap]/usr/lib64/libresolv-2.17.so` -> `[stack]` -> `[vdso]` -> `[vsyscall]`
 
 [stack:17979]代表`LWP`的`stack`
+
+## 进程创建的方式
+1. `fork()`
+2. `clone()`
+
+`fork()`基于`clone()`修改，只是通过不同的参数决定是创建进程还是创建线程。
+
 
 
 
