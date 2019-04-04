@@ -640,9 +640,11 @@ crontab -l | crontab -
 */1 * * * * huanjinzi ~/cms/run.sh
 ```
 
-## 获取PID
+## 字体
 ```
-PID=`netstat -ntpl | grep ${APP} | sed -n 's/.*LISTEN\s\+\([^\/]*\).*/\1/p'`
+fc-list :lang=zh //查看中文字体
+
 ```
+
 
 
