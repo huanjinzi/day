@@ -37,3 +37,9 @@ GET cms-video-info/_analyze
   "text": ["张学友"]
 }
 ```
+
+## 查询
+```
+curl http://localhost:9200/cms-video-info/_search/?q=name.SPY:qn
+curl -XDELETE http://localhost:9200/cms-video-info
+```
