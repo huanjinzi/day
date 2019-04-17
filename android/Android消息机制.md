@@ -28,6 +28,19 @@ void pthread_setspecific(pthread_key_t,void*) //设置键值
 void *pthread_getspecific(pthread_key_t) //获取键值
 ```
 
+## 简述
+Java层的`Looper`：
+1. `prepare()`：创建初始化`MessageQueue`，保存`Thread`对象，`Thread`对象是`MessageQueue`、`Handler`、`Looper`之间的纽带。
+2. `loop()`:从`MessageQueue.next()`中获取`Message`，并将`Message`分发给`Handler.handleMessage()`。
+3. 当`Message`为`null`的时候，`Looper`退出。
+
+Native层的`Looper`：
+
+
+> Java层的`Looper`和Native的`Looper`没有联系，是两个独立的对象，只是他们两个归属与同一个`Thread`对象。
+
+## MessageQueue
+
 作为一个`MessageQueue`的基本方法：`入队(enqueue)`和`出队(dequeue)`：
 ```java
 boolean enqueueMessage(Message msg, long when)
