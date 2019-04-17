@@ -10,3 +10,4 @@ ____
 * 2018.12.19 link:git/git-rm.adoc[ git rm 与 git rm --cached 的区别 ]
 * 2018.12.20 link:chromium/web_xr_present_state.adoc[ WebXR/VR Frame状态切换 ]
 * 2018.12.20 link:other/L-value_and_R-value.adoc[ L-value and R-value ]
+* 2019.04.17 link:android/android消息机制.md[ android消息机制 ]
