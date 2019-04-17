@@ -212,6 +212,8 @@ https://android.googlesource.com/new-password //添加用户，避免IP限制
 ## chromium
 ````
 gn gen --args='target_os="android"' out/Default
+gn ls out/Default/ device/vr
+autoninja -C out/Default device/vr:vr
 autoninja -C out/Default monochrome_public_apk
 scp out/Default/apks/MonochromePublic.apk huanjinzi@192.168.1.113:/home/huanjinzi/
 loadable_modules // 将so文件拷贝到apk
@@ -248,6 +250,7 @@ sed a\chromium_ 在行尾插入新行
 
 awk '{print $1}' //打印第一列的数据
 awk '{if(NR==1) print}' //打印第一行的数据,NR行号，NF列数，
+find ./s8000/ -name "*.tgz" | awk '{if( NR%2 == 1) print  }' | xargs sudo rm //等间隔删除文件
 ````
 ## find
 ````
@@ -573,6 +576,16 @@ alter table appstore_app_info default character set utf8;
 vi /etc/my.cnf
 port=3306
 
+mysqldump -uroot -proot -P3306 -A > all.sql
+mysqldump -uroot -proot -P3306 -A -t > all_table.sql
+mysqldump -uroot -proot -P3306 -A -d > all_data.sql
+mysqldump -uroot -proot -P3306 sakila  > sakila.sql
+mysqldump -uroot -proot -P3306 sakila -t > sakila_table.sql
+mysqldump -uroot -proot -P3306 sakila -d > sakila_data.sql
+mysqldump -uroot -proot--databases db1 db2 > db1_db2.sql
+
+mysqladmin -uroot -p123456 create sakila 
+mysql -uroot -proot  sakila < sakila.sql
 ```
 
 ## Libreoffice
