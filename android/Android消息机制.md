@@ -28,18 +28,51 @@ void pthread_setspecific(pthread_key_t,void*) //设置键值
 void *pthread_getspecific(pthread_key_t) //获取键值
 ```
 
+## 代码位置
+```
+frameworks/base/core/java/android/os/MessageQueue.java
+frameworks/base/core/java/android/os/Message.java
+
+frameworks/base/core/jni/android_os_MessageQueue.h
+frameworks/base/core/jni/android_os_MessageQueue.cpp
+
+system/core/include/utils/Looper.h
+system/core/libutils/Looper.cpp
+
+bionic/libc/include/sys/eventfd.h
+kernel/fs/eventfd.c
+
+system/core/include/utils/threads.h
+system/core/include/cutils/threads.h
+system/core/libcutils/threads.c
+
+system/core/include/utils/RefBase.h
+system/core/libutils/RefBase.cpp
+```
+
 ## 简述
-Java层的`Looper`：
-1. `prepare()`：创建初始化`MessageQueue`，保存`Thread`对象，`Thread`对象是`MessageQueue`、`Handler`、`Looper`之间的纽带。
-2. `loop()`:从`MessageQueue.next()`中获取`Message`，并将`Message`分发给`Handler.handleMessage()`。
-3. 当`Message`为`null`的时候，`Looper`退出。
+Java层的`Looper.java`：
+1. `prepare()`：创建初始化`MessageQueue.java`，保存`Thread.java`对象，`Thread.java`对象是`MessageQueue.java`、`Handler.java`、`Looper.java`之间的纽带。
+2. `loop()`：从`MessageQueue.java.next()`中获取`Message.java`，并将`Message.java`分发给`Handler.java.handleMessage()`。
+3. 当`Message.java`为`null`的时候，`Looper.java`退出。
 
 Native层的`Looper`：
+1. `prepare()`：在创建初始化`MessageQueue.java`会初始创建`NativeMessageQueue.cpp`对象，接着在`NativeMessageQueue.cpp`的构造方法中创建`Looper.cpp`，在`Looper.cpp`
+中创建`epoll fd`，并且将`Looper.cpp`对象存入`pthread_setspecific`中，相当于`ThreadLocal.java`。
 
+2.`loop()`：从`MessageQueue.java.next()`-> `NativeMessageQueue::pollOnce()` -> `Looper::pollOnce()` -> `Looper::pollOnce()` -> `epoll_wait()`，
+从调用过程来看，`MessageQueue.java.next()`方法会阻塞，方法阻塞的根本原因是阻塞在`epoll_wait()`上面。
 
-> Java层的`Looper`和Native的`Looper`没有联系，是两个独立的对象，只是他们两个归属与同一个`Thread`对象。
+3.在Native层中，`Looper.cpp`内部也会维护`Vector<MessageEnvelope>`消息列表，可以通过`Looper::sendMessage()`发送消息给`Looper.cpp`，在Java层，一般
+是通过`Handler.java`发送消息。
 
-## MessageQueue
+Java层的消息和Native的消息之间是隔离的，他们运行在同一个线程上面，有点消息队列中间件的意思，Java和Native相当于不同的`Topic`。
+
+> `Looper.java`没有`native`方法，自然`Looper.java`和`Looper.cpp`没有直接交互，是两个独立的对象，
+只是他们两个归属与同一个`Thread`对象,`MessageQueue.java`持有`NativeMessageQueue.cpp`的指针，`MessageQueue.java`
+通过`native`方法与`NativeMessageQueue.cpp`、`Looper.cpp`直接交互，。
+
+## Java MessageQueue
 
 作为一个`MessageQueue`的基本方法：`入队(enqueue)`和`出队(dequeue)`：
 ```java
@@ -55,9 +88,8 @@ class Message {
     Message next;
 }
 ```
-## MessageQueue
 ### MessageQueue入队操作
-入队操作的线程可以是拥有`Looper`的线程，即拥有`MessageQueue`，也可以是其他线程。的`MessageQueue`的入队方法`enqueueMessage(Message msg, long when)`多了一个参数`long when`。请注意，`when`默认是`Message`进入队列的时间，同时也是
+入队操作的线程可以是拥有`Looper`的线程，即拥有`MessageQueue`，也可以是其他线程。`MessageQueue`的入队方法`enqueueMessage(Message msg, long when)`多了一个参数`long when`。请注意，`when`默认是`Message`进入队列的时间，同时也是
 `Message`期望被处理的时间。队列中的`Message`根据`when`由小到大排序，`when`越小，在队列中的位置越靠前面。这里的`when`为`android.os.SystemClock.uptimeMillis()`。所以，
 正常情况下，`when > 0`，当然也存在`when = 0`的情况，当`msg`的`when == 0`的时候，`msg`会成为队列的`head`节点。
 
@@ -312,11 +344,6 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
                 int fd = response.request.fd;
                 int events = response.events;
                 void* data = response.request.data;
-#if DEBUG_POLL_AND_WAKE
-                ALOGD("%p ~ pollOnce - returning signalled identifier %d: "
-                        "fd=%d, events=0x%x, data=%p",
-                        this, ident, fd, events, data);
-#endif
                 if (outFd != NULL) *outFd = fd;
                 if (outEvents != NULL) *outEvents = events;
                 if (outData != NULL) *outData = data;
@@ -325,9 +352,6 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
         }
 
         if (result != 0) {
-#if DEBUG_POLL_AND_WAKE
-            ALOGD("%p ~ pollOnce - returning result %d", this, result);
-#endif
             if (outFd != NULL) *outFd = 0;
             if (outEvents != NULL) *outEvents = 0;
             if (outData != NULL) *outData = NULL;
@@ -342,9 +366,6 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
 ## Looper.pollInner
 ```c++
 int Looper::pollInner(int timeoutMillis) {
-#if DEBUG_POLL_AND_WAKE
-    ALOGD("%p ~ pollOnce - waiting: timeoutMillis=%d", this, timeoutMillis);
-#endif
 
     // Adjust the timeout based on when the next message is due.
     if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
@@ -354,10 +375,6 @@ int Looper::pollInner(int timeoutMillis) {
                 && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
             timeoutMillis = messageTimeoutMillis;
         }
-#if DEBUG_POLL_AND_WAKE
-        ALOGD("%p ~ pollOnce - next message in %" PRId64 "ns, adjusted timeout: timeoutMillis=%d",
-                this, mNextMessageUptime - now, timeoutMillis);
-#endif
     }
 
     // Poll.
@@ -397,17 +414,11 @@ int Looper::pollInner(int timeoutMillis) {
 
     // Check for poll timeout.
     if (eventCount == 0) {
-#if DEBUG_POLL_AND_WAKE
-        ALOGD("%p ~ pollOnce - timeout", this);
-#endif
         result = POLL_TIMEOUT;
         goto Done;
     }
 
     // Handle all events.
-#if DEBUG_POLL_AND_WAKE
-    ALOGD("%p ~ pollOnce - handling events from %d fds", this, eventCount);
-#endif
 
     for (int i = 0; i < eventCount; i++) {
         int fd = eventItems[i].data.fd;
@@ -452,10 +463,6 @@ Done: ;
                 mSendingMessage = true;
                 mLock.unlock();
 
-#if DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS
-                ALOGD("%p ~ pollOnce - sending message: handler=%p, what=%d",
-                        this, handler.get(), message.what);
-#endif
                 handler->handleMessage(message);
             } // release handler
 
@@ -479,10 +486,7 @@ Done: ;
             int fd = response.request.fd;
             int events = response.events;
             void* data = response.request.data;
-#if DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS
-            ALOGD("%p ~ pollOnce - invoking fd event callback %p: fd=%d, events=0x%x, data=%p",
-                    this, response.request.callback.get(), fd, events, data);
-#endif
+
             // Invoke the callback.  Note that the file descriptor may be closed by
             // the callback (and potentially even reused) before the function returns so
             // we need to be a little careful when removing the file descriptor afterwards.
@@ -499,27 +503,5 @@ Done: ;
     }
     return result;
 }
-```
-
-## 代码位置
-```
-frameworks/base/core/java/android/os/MessageQueue.java
-frameworks/base/core/java/android/os/Message.java
-
-frameworks/base/core/jni/android_os_MessageQueue.h
-frameworks/base/core/jni/android_os_MessageQueue.cpp
-
-system/core/include/utils/Looper.h
-system/core/libutils/Looper.cpp
-
-bionic/libc/include/sys/eventfd.h
-kernel/fs/eventfd.c
-
-system/core/include/utils/threads.h
-system/core/include/cutils/threads.h
-system/core/libcutils/threads.c
-
-system/core/include/utils/RefBase.h
-system/core/libutils/RefBase.cpp
 ```
 
