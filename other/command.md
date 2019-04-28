@@ -558,6 +558,7 @@ UPDATE runoob_tbl SET runoob_title='学习 C++' WHERE runoob_id=3;
 // 一定要注意，这里是utf8，不是utf-8
 
 drop database xxxx; //删除数据库
+drop table xxxx; //删除数据表格
 
 //远程连接问题
 sudo vim  /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -658,6 +659,74 @@ crontab -l | crontab -
 fc-list :lang=zh //查看中文字体
 
 ```
+
+## 大小写转换
+```
+echo abc | tr a-z A-Z
+```
+
+##正则表达式
+
+### 数字版本号匹配
+例如：`1.0.1`,`1.12`
+```
+^[0-9]+([.][0-9]+)+$
+```
+
+## 显卡信息查看
+```
+lspci
+```
+
+## covert命令
+convert命令可以用来转换图像的格式，支持JPG, BMP, PCX, GIF, PNG, TIFF, XPM和XWD等类型，下面举几个例子: 
+```
+  convert  xxx.jpg  xxx.png   将jpeg转成png文件 
+  convert  xxx.gif   xxx.bmp  将gif转换成bmp图像 
+  convert  xxx.tiff    xxx.pcx   将tiff转换成pcx图像 
+  ```
+还可以改变图像的大小: 
+```
+  convert -resize 1024x768  xxx.jpg   xxx1.jpg    将图像的像素改为1024*768，注意1024与768之间是小写字母x 
+  convert -sample 50%x50%  xxx.jpg  xxx1.jpg   将图像的缩减为原来的50%*50% 
+```
+旋转图像：
+``` 
+convert -rotate 270 sky.jpg sky-final.jpg      将图像顺时针旋转270度 
+```
+使用-draw选项还可以在图像里面添加文字： 
+```
+convert -fill black -pointsize 60 -font helvetica -draw 'text 10,80 "Hello, World!"'  hello.jpg  helloworld.jpg
+```
+在图像的10,80 位置采用60磅的全黑Helvetica字体写上 Hello, World! 
+```
+
+1、批量图像格式转换
+
+如果想将某目录下的所有jpg文件转换为png文件，只要在命令行模式下输入: 
+```
+　　for %f in (*.jpg) do convert "%f" "%~nf.png"
+```
+
+2、对所有图像进行同一操作
+
+譬如，批量生成某目录下所有PNG图像文件的缩略图(大小为80×40): 
+```
+　　for %f in (*.png) do convert "%f" -sample 80×40 "%~nf_sample.png"
+```
+类似的，将某目录下所有PNG图像旋转90度的操作为： 
+```
+　　for %f in (*.png) do convert "%f" -rotate 90 "%~nf_rotate.png" 
+```
+还可以进行批量裁剪、淡化、抖动、炭化、加边框、圆角等等一系列操作
+
+3、在图像上加上文字说明 
+
+如果你有大量图片需要发布，在所有图片上加上版权说明是很明智的做法。
+```
+　　convert channel.png -fill red -pointsize 13 -draw 'text 10,15 "lifesinger 2006"' 2.png
+```
+
 
 
 
