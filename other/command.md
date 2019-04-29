@@ -727,6 +727,51 @@ convert -fill black -pointsize 60 -font helvetica -draw 'text 10,80 "Hello, Worl
 　　convert channel.png -fill red -pointsize 13 -draw 'text 10,15 "lifesinger 2006"' 2.png
 ```
 
+## OTA
+```
+./build/tools/releasetools/ota_from_target_files -i old-ota-middle.zip new-ota-middle.zip ~/update.zip
+```
+
+
+## IP设置
+```
+    ifconfig eth0 128.224.156.81 up  //一般的嵌入式linux中设置IP。
+    ifconfig eth0 128.224.156.81 netmask 255.255.255.0 up
+    netcfg eth0 up dhcp   //通过dhcp 自动获取ip，网关，掩码等。
+```
+
+## gateway
+```
+    route add default gw 128.224.156.1  //一般的嵌入式linux会用这个命令添加网关,但是android中不用。直接“netcfg eth0 up dhcp” 自动分配IP等。
+```
+
+## dns
+```
+echo "nameserver 128.224.160.11" > resolv.conf  //一般嵌入式linux中设置dns的方法
+nameserver 128.224.160.11
+
+setprop net.dns1 128.224.160.11   //android中设置DNS的命令。
+setprop net.dns2 147.11.100.30
+```
+## 自动获取IP
+```
+./dhcpcd -U eth1
+broadcast_address='192.168.100.255'
+dhcp_lease_time='30'
+dhcp_message_type='5'
+dhcp_server_identifier='192.168.100.1'
+ip_address='192.168.100.10'
+network_number='192.168.100.0'
+routers='192.168.100.1'
+subnet_cidr='24'
+subnet_mask='255.255.255.0'
+```
+ 
+
+## 自动获取IP的详细调用过程
+```
+./dhcpcd -h eth1 -d
+```
 
 
 
