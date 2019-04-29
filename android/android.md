@@ -48,6 +48,22 @@ dependencies {
 
 ```
 
+## 查看系统默认输入法
+```
+adb shell settings get secure default_input_method
+adb shell settings get secure enabled_input_methods
+```
+
+通过`loadStringSetting()`方法从数据库加载`default_input_method`或者`enabled_input_methods`
+
+## 内核模块
+```
+insmod awusb.ko
+demsg //查看模块加载失败信息
+modinfo awusb.ko
+
+```
+
 
 
 
