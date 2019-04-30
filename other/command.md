@@ -126,6 +126,9 @@ git clone --recursive repository.git
 
 git rebase -i HEAD~4 // fixup squash将会合并commit
 
+git checkout -b branch_name v1.0 //基于Tag创建分支
+git push origin :tag_name //push tag 到远程仓库
+git tag -d tag_name // 删除tag 
 
 //创建新分支
 git checkout -b|B 
