@@ -437,7 +437,7 @@ keytool -genkey -v -alias "github" -keyalg "RSA" -keystore "huanjinzi.keystore" 
 keytool -list -keystore "huanjinzi.keystore" // 如果keystore有密码的话，需要输入密码
 keytool -export -alias github -file test.crt -keystore huanjinzi.keystore //提取证书
 
-keytool -printcert -file CERT.RSA
+keytool -printcert -rfc -file CERT.RSA
 openssl pkcs7 -inform DER -in META-INF/CERT.RSA -noout -print_certs -text
 
 
@@ -774,6 +774,29 @@ subnet_mask='255.255.255.0'
 ## 自动获取IP的详细调用过程
 ```
 ./dhcpcd -h eth1 -d
+```
+
+## 查看内核编译选项
+```
+cat /boot/config-`uname -r`
+```
+
+## cgroup
+挂载cgroup
+```
+mkdir /mnt/cgroup
+mount -t cgroup cgroup /mnt/cgroup/
+```
+ubuntu默认挂载目录`/sys/fs/cgroup`
+
+## mkdir
+```
+mkdir {A,B} //创建多级目录
+```
+
+## mount
+```
+cat /etc/mtab //查看系统中已经挂载的设备
 ```
 
 
