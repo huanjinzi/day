@@ -799,5 +799,19 @@ mkdir {A,B} //创建多级目录
 cat /etc/mtab //查看系统中已经挂载的设备
 ```
 
+## 分区
+```
+mkfs.ext4 /dev/vdc
+
+```
+
+## ffmpeg
+```
+ffmpeg -re -i 4k.mp4 -c:v copy -c:a copy -f flv -y rtmp://127.0.0.1/live/test
+find /home/storage/backup/jinding/517/2019-05-16/ -name "*.flv" | xargs -I @ ./ffmpeg -re  -i @ -c:v copy -c:a copy -f flv -y rtmp://127.0.0.1/live/517
+ffmpeg -i input.flv output.mp4
+ffmpeg -i rtmp://server/live/originalStream -c:a copy -c:v libx264 -vpre slow -f flv rtmp://server/live/h264Stream
+```
+
 
 
