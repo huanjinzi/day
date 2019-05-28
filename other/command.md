@@ -814,5 +814,35 @@ ffmpeg -i rtmp://server/live/originalStream -c:a copy -c:v libx264 -vpre slow -f
 ffmpeg -i input.avi -b:v 64k -bufsize 64k output.mp4
 ```
 
+## android pm
+```
+cmd package list packages
+pm path com.android.chrome
+```
+
+## all winner
+```
+#include <linux/sched.h>
+#include <linux/sched/signal.h>
+#include <linux/hardirq.h>     //<linux/smp_lock.h>
+```
+
+## linux mod
+```
+insmod xx.ko
+modinfo xx.ko
+lsmod
+```
+
+## cmd package
+```
+cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.LAUNCHER com.android.chrome
+```
+
+## am
+```
+am start com.android.chrome com.android.chrome/com.google.android.apps.chrome.Main
+```
+
 
 
