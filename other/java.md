@@ -1,3 +1,5 @@
+# Java
+
 ## 修改Final字段
 ```
 
@@ -9,3 +11,19 @@
             e.printStackTrace();
        }
 ```
+
+## try-catch-finally
+```
+try {
+            throwEx();
+            return;
+        } catch (Exception e) {
+            System.out.println("catch");
+            return;
+        } finally {
+            System.out.println("finally");
+        }
+        
+        // System.out.println("method"); 编译错误
+```
+在`catch`代码段的最后添加`return`语句，`finally`的语句能够执行
