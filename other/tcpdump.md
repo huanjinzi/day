@@ -20,3 +20,15 @@
 tcpdump -vv -q -XX -n -i wlan0
 ```
 
+## TCP连接
+```
+a012 ACK SYN
+a002 SYN
+8010 ACK
+8018 ACK PUSH
+c0a8 URG PUSH
+
+30 0d 0a 0\r\n
+
+```
+

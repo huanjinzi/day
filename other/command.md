@@ -563,13 +563,15 @@ UPDATE runoob_tbl SET runoob_title='学习 C++' WHERE runoob_id=3;
 drop database xxxx; //删除数据库
 drop table xxxx; //删除数据表格
 
+set password for 用户名@localhost = password('新密码');
+mysqladmin -uroot -p123456 password 123
+
 //远程连接问题
 sudo vim  /etc/mysql/mysql.conf.d/mysqld.cnf
 // #bind-address		= 127.0.0.1 //注释
 SELECT DISTINCT CONCAT('User: ''',user,'''@''',host,''';') AS query FROM mysql.user;
 GRANT ALL PRIVILEGES ON *.* TO 'username'@'192.168.10.83' IDENTIFIED BY 'password' WITH GRANT OPTION;
 flush privileges;
-
 show global variables like 'port'; // 常看端口号
 CREATE DATABASE appstore; // 创建数据库
 
