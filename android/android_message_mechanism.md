@@ -329,38 +329,149 @@ for (size_t i = 0; i < mRequests.size(); i++) {
 `Looper::addFd()`方法会从`mRequests`中add新的Request，`Looper::removeFd()`方法会从`mRequests`中remove指定
 的Request。在`addFd`的时候，通过`epoll_ctl()`的 `EPOLL_CTL_ADD`添加`Fd`。如果`Fd`对应的Request已经存在`mRequests`中，
 则会通过`EPOLL_CTL_MOD`更新`Fd`，更新遇到`ENOENT`的话，就调用`rebuildEpollLocked()`从新创建`epoll instance`。否则`addFd()`
-操作失败。`removeFd()`的操作与`addFd()`的操作基本类似。
-```
+操作失败。`removeFd()`的操作与`addFd()`的操作基本类似。每增加一个`Request`，就会在`epoll_wait()`后面`pushResponse()`。
+```java
 //处理addFd()，并回调相应的callback
 struct Request {
-        int fd;
-        int ident;
-        int events;
-        int seq;
-        sp<LooperCallback> callback;
-        void* data;
+    int fd;
+    int ident;
+    int events;// INPUT | OUTPUT | ERROR | HANGUP | INVALID
+    int seq;
+    sp<LooperCallback> callback;
+    void* data;
+    void initEventItem(struct epoll_event* eventItem) const;
+};
 
-        void initEventItem(struct epoll_event* eventItem) const;
-    };
+class LooperCallback : public virtual RefBase {
+protected:
+    virtual ~LooperCallback() { }
 
-    struct Response {
-        int events;
-        Request request;
-    };
+public:
+    /**
+     * Handles a poll event for the given file descriptor.
+     * It is given the file descriptor it is associated with,
+     * a bitmask of the poll events that were triggered (typically EVENT_INPUT),
+     * and the data pointer that was originally supplied.
+     *
+     * Implementations should return 1 to continue receiving callbacks, or 0
+     * to have this file descriptor and callback unregistered from the looper.
+     */
+    virtual int handleEvent(int fd, int events, void* data) = 0;
+};
+
+struct Response {
+    int events;
+    Request request;
+};
+
+struct Message {
+    Message() : what(0) { }
+    Message(int what) : what(what) { }
+
+    /* The message type. (interpretation is left up to the handler) */
+    int what;
+};
+
+class MessageHandler : public virtual RefBase {
+protected:
+    virtual ~MessageHandler() { }
+public:
+    /**
+     * Handles a message.
+     */
+    virtual void handleMessage(const Message& message) = 0;
+};
     
     
 //处理 sendMessage()
 struct MessageEnvelope {
-        MessageEnvelope() : uptime(0) { }
+    MessageEnvelope() : uptime(0) { }
+    MessageEnvelope(nsecs_t uptime, const sp<MessageHandler> handler,
+        const Message& message) : uptime(uptime), handler(handler), message(message) {
+    }
 
-        MessageEnvelope(nsecs_t uptime, const sp<MessageHandler> handler,
-                const Message& message) : uptime(uptime), handler(handler), message(message) {
-        }
+    nsecs_t uptime;
+    sp<MessageHandler> handler;
+    Message message;
+};
+```
 
-        nsecs_t uptime;
-        sp<MessageHandler> handler;
-        Message message;
+```c++
+enum {
+        /**
+         * Result from Looper_pollOnce() and Looper_pollAll():
+         * The poll was awoken using wake() before the timeout expired
+         * and no callbacks were executed and no other file descriptors were ready.
+         */
+        POLL_WAKE = -1,
+
+        /**
+         * Result from Looper_pollOnce() and Looper_pollAll():
+         * One or more callbacks were executed.
+         */
+        POLL_CALLBACK = -2,
+
+        /**
+         * Result from Looper_pollOnce() and Looper_pollAll():
+         * The timeout expired.
+         */
+        POLL_TIMEOUT = -3,
+
+        /**
+         * Result from Looper_pollOnce() and Looper_pollAll():
+         * An error occurred.
+         */
+        POLL_ERROR = -4,
     };
+    
+    enum {
+        /**
+         * The file descriptor is available for read operations.
+         */
+        EVENT_INPUT = 1 << 0,
+
+        /**
+         * The file descriptor is available for write operations.
+         */
+        EVENT_OUTPUT = 1 << 1,
+
+        /**
+         * The file descriptor has encountered an error condition.
+         *
+         * The looper always sends notifications about errors; it is not necessary
+         * to specify this event flag in the requested event set.
+         */
+        EVENT_ERROR = 1 << 2,
+
+        /**
+         * The file descriptor was hung up.
+         * For example, indicates that the remote end of a pipe or socket was closed.
+         *
+         * The looper always sends notifications about hangups; it is not necessary
+         * to specify this event flag in the requested event set.
+         */
+        EVENT_HANGUP = 1 << 3,
+
+        /**
+         * The file descriptor is invalid.
+         * For example, the file descriptor was closed prematurely.
+         *
+         * The looper always sends notifications about invalid file descriptors; it is not necessary
+         * to specify this event flag in the requested event set.
+         */
+        EVENT_INVALID = 1 << 4,
+};
+
+enum {
+        /**
+         * Option for Looper_prepare: this looper will accept calls to
+         * Looper_addFd() that do not have a callback (that is provide NULL
+         * for the callback).  In this case the caller of Looper_pollOnce()
+         * or Looper_pollAll() MUST check the return from these functions to
+         * discover when data is available on such fds and process it.
+         */
+        PREPARE_ALLOW_NON_CALLBACKS = 1<<0
+};
 ```
 
 `epoll_wait`之后，先处理`sendMessage()`发送到`MessageEnvelope`的消息，接着再处理通过`addFd`添加进来的`Request`，对于`java`层的`Looper`，只处理
@@ -368,9 +479,9 @@ struct MessageEnvelope {
 
 
 
-```c++
+```java
 int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData) {
-    int result = 0;
+    int result = 0; // WAKE | TIMEOUT | CALLBACK | ERROR
     for (;;) {
         while (mResponseIndex < mResponses.size()) {
             const Response& response = mResponses.itemAt(mResponseIndex++);
@@ -399,7 +510,7 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
 ```
 
 ## Looper.pollInner
-```c++
+```java
 int Looper::pollInner(int timeoutMillis) {
 
     // Adjust the timeout based on when the next message is due.
@@ -454,7 +565,6 @@ int Looper::pollInner(int timeoutMillis) {
     }
 
     // Handle all events.
-
     for (int i = 0; i < eventCount; i++) {
         int fd = eventItems[i].data.fd;
         uint32_t epollEvents = eventItems[i].events;
