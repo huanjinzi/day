@@ -42,6 +42,12 @@ watchdog.init(context, mActivityManagerService);
 9.`systemReady()`
 10.`Looper.loop()`
 
+## 服务类型
+```
+SystemServiceManager SystemService
+ServiceManager/LocalServices IBinder
+```
+
 ## 6.startBootstrapServices
 1.`Installer`
 ```
