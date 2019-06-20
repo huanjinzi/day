@@ -29,13 +29,29 @@ curl -H "X-First-Name;" http://127.0.0.1
 ```
 
 ## http请求response header
-此时curl默认使用的http的`HEAD`方法
+此时curl默认使用的http的`HEAD`方法，`-I`打印response header
 ```
 curl -I http://127.0.0.1
 ```
 修改curl的方法
 ```
 curl -X GET -I http://127.0.0.1
+```
+
+## http post form data
+```
+curl -d "xx=ss&yy=aa" http://127.0.0.1
+```
+
+## http response
+```
+curl -D - -d "xx=ss&yy=aa" http://127.0.0.1
+```
+
+## multipart/form-data
+
+```
+curl -X POST -F "file=@app.apk" -F "platform=1" xx.com
 ```
 
 
