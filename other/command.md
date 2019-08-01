@@ -763,5 +763,16 @@ cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.cat
 am start com.android.chrome com.android.chrome/com.google.android.apps.chrome.Main
 ```
 
+## jar
+创建jar包
+```
+jar cf class.jar com/
+```
+
+## javac
+```
+javac -cp ~/workspace/sdk/platforms/android-28/android.jar com/ssnwt/http/*
+```
+
 
 
