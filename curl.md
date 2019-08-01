@@ -54,4 +54,42 @@ curl -D - -d "xx=ss&yy=aa" http://127.0.0.1
 curl -X POST -F "file=@app.apk" -F "platform=1" xx.com
 ```
 
+## content-length
+```
+curl -X HEAD http://pic.cms.skyworthxr.com/00f3a0a5085650c4698f8423b4759718  -v
+```
+
+```
+> HEAD /00f3a0a5085650c4698f8423b4759718 HTTP/1.1
+> Host: pic.cms.skyworthxr.com
+> User-Agent: curl/7.47.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Content-Type: image/png
+< Content-Length: 57694
+< Accept-Ranges: bytes
+< Age: 534354
+
+```
+
+## partial download
+```
+curl -H "Range: bytes=0-3" http://pic.cms.skyworthxr.com/00f3a0a5085650c4698f8423b4759718  -v
+```
+
+```
+> User-Agent: curl/7.47.0
+> Accept: */*
+> Range: bytes=0-3
+> 
+< HTTP/1.1 206 Partial Content
+< Content-Type: image/png
+< Content-Length: 4
+< Connection: keep-alive
+< Accept-Ranges: bytes
+< Age: 534158
+
+```
+
 
