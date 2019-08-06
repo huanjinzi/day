@@ -487,6 +487,14 @@ LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
 include $(BUILD_PREBUILT)
 ```
 
+### LOCAL_EXPORT_C_INCLUDES
+让依赖这个项目的模块可以找到此模块中的`header files`，即暴露此模块的`header files`，
+> 注意：此变量需要使用绝对路径
+
+### LOCAL_C_INCLUDES
+本模块依赖的`header files`
+> 注意：此变量需要使用绝对路径比较保险
+
 ## 压缩包预览
 ```
 zip -v file.zip
@@ -772,6 +780,12 @@ jar cf class.jar com/
 ## javac
 ```
 javac -cp ~/workspace/sdk/platforms/android-28/android.jar com/ssnwt/http/*
+```
+
+## find
+删除cpp文件
+```
+find  /home/huanjinzi/workspace/project/VRLib/DMR/src/main/jni/include -regex "\(.*[.]cpp\)" | xargs rm
 ```
 
 
