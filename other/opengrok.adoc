@@ -64,3 +64,67 @@ this command will spend a lot of time.
 
 5.open `http://localhost:8080/source` opengrok works.
 
+== sampale
+
+....
+java -jar /home/ssnwt/src/opengrok/lib/opengrok.jar -s /home/ssnwt/src/opengrok/src -d /home/ssnwt/src/opengrok/data -U http://localhost:9090/source -W /home/ssnwt/src/opengrok/config.xml -T 16 --progress -S -H -P -G -c /usr/local/bin/ctags \
+-r on \
+-I *.java \
+-I *.c \
+-I *.cc \
+-I *.h \
+-I *.mk \
+-I *.cpp \
+-I *.aidl \
+-I *.sh \
+-i f:*.so \
+-i f:*.gz \
+-i f:*.o \
+-i f:*.a \
+-i f:*.zip \
+-i f:*.html \
+-i f:*.md \
+-i f:*.ninga \
+-i f:*.py \
+-i f:*.js \
+-i d:src/abi \
+-i d:src/art \
+-i d:src/compatibility \
+-i d:src/cts \
+-i d:src/dalvik \
+-i d:src/developers \
+-i d:src/development \
+-i d:src/docs \
+-i d:src/external \
+-i d:src/libcore \
+-i d:src/libnativehelper \
+-i d:src/ndk \
+-i d:src/pdk \
+-i d:src/platform_testing \
+-i d:src/prebuilts \
+-i d:src/sdk \
+-i d:src/test \
+-i d:src/toolchain \
+-i d:src/tools \
+-i d:test \
+-i d:tests \
+-i d:abi \
+-i d:art \
+-i d:compatibility \
+-i d:cts \
+-i d:dalvik \
+-i d:developers \
+-i d:development \
+-i d:docs \
+-i d:external \
+-i d:libcore \
+-i d:libnativehelper \
+-i d:ndk \
+-i d:pdk \
+-i d:platform_testing \
+-i d:prebuilts \
+-i d:sdk \
+-i d:toolchain \
+-i d:tools
+....
+
