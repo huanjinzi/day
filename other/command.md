@@ -100,6 +100,8 @@ bash -c "pwd"
 ```
 ssh -p 29418 yuanhuan@192.168.1.164 gerrit ls-projects //查看Gerrit Project
 ssh -p 29418 yuanhuan@192.168.1.164 gerrit review --verified 1 ad9b7af6 //code review
+// 创建账户
+cat ~/.ssh/id_watcher.pub | ssh -p 29418 review.example.com gerrit create-account --group "'Non-Interactive Users'" --ssh-key - watcher
 ```
 ## git 命令
 
@@ -788,5 +790,10 @@ javac -cp ~/workspace/sdk/platforms/android-28/android.jar com/ssnwt/http/*
 find  /home/huanjinzi/workspace/project/VRLib/DMR/src/main/jni/include -regex "\(.*[.]cpp\)" | xargs rm
 ```
 
+## so
+```
+ldd xx.so //查看so库的依赖
+readelf -h xx.so //查看so库的header信息
+```
 
 
