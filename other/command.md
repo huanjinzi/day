@@ -794,6 +794,11 @@ find  /home/huanjinzi/workspace/project/VRLib/DMR/src/main/jni/include -regex "\
 ```
 ldd xx.so //查看so库的依赖
 readelf -h xx.so //查看so库的header信息
+
+//动态库连接配置，lib*.so*
+ldconfig -v
+/etc/ld.so.conf.d/
 ```
+一般配置优先级，编译参数 > 环境变量 > 自定义 > 系统默认
 
 
