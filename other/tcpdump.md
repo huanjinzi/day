@@ -18,6 +18,8 @@
 ## Example
 ```
 tcpdump -vv -q -XX -n -i wlan0
+tcpdump -vv -q -XX -n -i wlan0 src host 192.168.1.102 and dst host 239.255.255.250
+tcpdump -vv -q -XX -n -i wlan0 \(src host 192.168.1.102 and dst host 239.255.255.250\) or \(src host 192.168.1.189 and dst host 192.168.1.102\)
 ```
 
 ## TCP连接
