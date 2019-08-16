@@ -818,4 +818,10 @@ LD_LIBRARY_PATH=[path]
 smbclient //192.168.1.172/ssnwt
 ```
 
+## rpm转deb
+```
+sudo alien xx.rpm
+sudo dpkg -i xxxx.deb #安装 
+```
+
 
