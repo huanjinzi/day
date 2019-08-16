@@ -798,7 +798,24 @@ readelf -h xx.so //查看so库的header信息
 //动态库连接配置，lib*.so*
 ldconfig -v
 /etc/ld.so.conf.d/
+
+// 环境变量，指定so库的位置
+LD_LIBRARY_PATH=[path]
 ```
 一般配置优先级，编译参数 > 环境变量 > 自定义 > 系统默认
+
+1. 每个动态库有一个包含了真正的库代码的文件名，通常被称为库的 `realname` ，命名格式通常为:
+`libxxx.so.x.y.z`，其中so后缀中的`x`为主版本号，`y`为副版本号，`z`为发行版本号。例如，我的linux系统机器上zlib共享库的`realname`为 `libz.so.1.2.8`，这个文件是含有可执行的二进制代码的。
+
+2. 每个动态库都有一个以`lib`为前缀且以`.so.x`为结尾的被称为`soname`:
+的特定名称，其中`x`为主版本号，`soname`命名格式通常为`libxxx.so.x`。例如，我的linux系统机器上`zlib`共享库的`soname`为`libz.so.1`。这个`soname`包含了动态库的主版本号，这个`soname`一般会包含在库代码的头文件中，这个可以使用 `readelf -d` 读取出来，使用这个动态库的程序的二进制ELF的头文件中包含有这个动态库的`soname`。程序运行时会按照这个名称去找真正的库文件。
+
+3. 此外，编译链依赖了共享库的应用模块时，链接器只认不带任何版本号的共享库名， 可以将库名称作`linker name`:
+例如，我的linux系统机器上`zlib`共享库的`linkername`为`libz.so`。也即，链接使用了动态库的程序时查找的动态库名称。例如：`gcc -o test test.o -lz` , 链接时就会找`libz.so`。若没有这个文件，链接器就报错。
+
+## smb
+```
+smbclient //192.168.1.172/ssnwt
+```
 
 
